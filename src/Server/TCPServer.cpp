@@ -1,6 +1,6 @@
 #include "../../include/Server/TCPServer.hpp"
 
-TCPServer::TCPServer() : m_ioservice( ), m_acceptor( m_ioservice ), m_connections( ) 
+TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice ), server_connections( ) 
 {
 
 }
@@ -15,7 +15,7 @@ void TCPServer::handle_read(std::list<ServerTCPConnection>::iterator connectionI
 
         std::getline(is, line);
 
-        std::cout << "[Connection " << connectionID << "] has received message: \n \t" << line << std::endl;
+        std::cout << "[Connection] has received message: \n \t" << line << std::endl;
 
     }
 
@@ -37,7 +37,7 @@ void TCPServer::do_async_read(std::list<ServerTCPConnection>::iterator connectio
     boost::asio::async_read_until(connectionID->socket, connectionID->read_buffer, "\n", handler);
 }
 
-void TCPServer::handle_write(std:list<ServerTCPConnection>::iterator connectionID, std::shared_ptr<std::string> messageBuffer, boost::system::error_code const & err)
+void TCPServer::handle_write(std::list<ServerTCPConnection>::iterator connectionID, std::shared_ptr<std::string> messageBuffer, boost::system::error_code const & err)
 {
     if(!err)
     {
@@ -51,7 +51,7 @@ void TCPServer::handle_write(std:list<ServerTCPConnection>::iterator connectionI
     else
     {
         std::cerr << "We had an error: " << err.message() << std::endl;
-        server_connections.erase(connectionID)
+        server_connections.erase(connectionID);
     }
 }
 
@@ -59,10 +59,10 @@ void TCPServer::handle_accept(std::list<ServerTCPConnection>::iterator connectio
 {
     if(!err)
     {
-        std::cout << "Connection from: " << connectionID->remote_endpoint( ).address( ).to_string( ) << "\n";
+        std::cout << "Connection from: " << connectionID->socket.remote_endpoint().address().to_string() << "\n";
 		std::cout << "Sending message\n";
 		auto buff = std::make_shared<std::string>( "Hello World!\r\n\r\n" );
-		auto handler = boost::bind( &Server::handle_write, this, connectionID, buff, boost::asio::placeholders::error );
+		auto handler = boost::bind( &TCPServer::handle_write, this, connectionID, buff, boost::asio::placeholders::error );
 		boost::asio::async_write( connectionID->socket, boost::asio::buffer( *buff ), handler );
 		do_async_read( connectionID );
     }

@@ -1,9 +1,10 @@
 #include "ServerTCPConnection.hpp"
+#include <list>
 
 class TCPServer
 {
     boost::asio::io_service server_ioservice;
-    boost::asio::tcp::acceptor server_acceptor;
+    boost::asio::ip::tcp::acceptor server_acceptor;
     
     //Used for the .emplace() method on connection structs
     std::list<ServerTCPConnection> server_connections;
@@ -24,4 +25,4 @@ public:
     void listen(int);
 
     void run();
-}
+};

@@ -33,7 +33,7 @@ add_executable(Client client.cpp)
 
 target_link_libraries(Client ${USED_LIBS})
 
-add_executable(Server server.cpp)
+add_executable(Server server.cpp src/Server/TCPServer.cpp)
 
 target_link_libraries(Server ${USED_LIBS})
 
