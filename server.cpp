@@ -3,15 +3,14 @@
 #include <string>
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
+#include "include/TCPServer.hpp"
 
 
 int main()
 {
-    try
-    {
-        //Get object to represent io features of curent OS
-        boost::asio::io_context io_context;
+    auto srv = TCPServer();
+    srv.listen(12345);
 
-        //Object to listen for new connections
-    }
+    srv.run();
+    return 0;
 }
