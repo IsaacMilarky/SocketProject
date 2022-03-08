@@ -29,8 +29,12 @@ ENDIF(Boost_FOUND)
 
 SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY})
 
-add_executable(SocketProject main.cpp)
+add_executable(Client client.cpp)
 
-target_link_libraries(SocketProject ${USED_LIBS})
+target_link_libraries(Client ${USED_LIBS})
+
+add_executable(Server server.cpp)
+
+target_link_libraries(Server ${USED_LIBS})
 
 #install(TARGETS Splits DESTINATION bin)
