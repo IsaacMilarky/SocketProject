@@ -1,6 +1,19 @@
 #include "ServerTCPConnection.hpp"
 #include <list>
 
+
+/*
+    Encapsulates the function of an async tcp server running on a port.
+
+    Note: when I originally wrote this code I was following example code to learn how this library worked so 
+    any slight similarities to this link are explained by that.
+
+    Here is the example code I was learning from:
+
+
+    Written by Isaac Milarsky 3/8/2022
+*/
+
 class TCPServer
 {
     boost::asio::io_service server_ioservice;

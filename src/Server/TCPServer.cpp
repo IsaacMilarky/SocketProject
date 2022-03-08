@@ -10,7 +10,7 @@ void TCPServer::handle_read(std::list<ServerTCPConnection>::iterator connectionI
 {
     if(bytes_transferred > 0)
     {
-        std::istream is( &connectionID->read_buffer);
+        std::istream is( &connectionID->buffer);
         std::string line;
 
         std::getline(is, line);
@@ -34,7 +34,7 @@ void TCPServer::do_async_read(std::list<ServerTCPConnection>::iterator connectio
 {
     auto handler = boost::bind(&TCPServer::handle_read, this, connectionID, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
 
-    boost::asio::async_read_until(connectionID->socket, connectionID->read_buffer, "\n", handler);
+    boost::asio::async_read_until(connectionID->socket, connectionID->buffer, "\n", handler);
 }
 
 void TCPServer::handle_write(std::list<ServerTCPConnection>::iterator connectionID, std::shared_ptr<std::string> messageBuffer, boost::system::error_code const & err)
