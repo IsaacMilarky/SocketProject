@@ -1,43 +1,89 @@
 #include "../../include/Server/TCPServer.hpp"
+#include <boost/system/detail/error_code.hpp>
 
-TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice ), server_connections( ) 
+TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice )
 {
 
 }
 
 
-void TCPServer::handle_read(std::list<ServerTCPConnection>::iterator connectionID, boost::system::error_code const & err, size_t bytes_transferred)
+std::string TCPServer::handle_read(ServerTCPConnection* connectionID, size_t bytes_transferred)
 {
+    std::string line;
+
     if(bytes_transferred > 0)
     {
         std::istream is( &connectionID->buffer);
-        std::string line;
 
         std::getline(is, line);
 
         std::cout << "[Connection] has received message: \n \t" << line << std::endl;
 
     }
+    else {
+        line = "";
+    }
 
-    if(!err)
-    {
-        do_async_read(connectionID);
-    }
-    else
-    {
-        std::cerr << "Unexpected error: " << err.message() << std::endl;
-        server_connections.erase(connectionID);
-    }
+    return line;
 }
 
-void TCPServer::do_async_read(std::list<ServerTCPConnection>::iterator connectionID)
+int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::string>* args)
 {
-    auto handler = boost::bind(&TCPServer::handle_read, this, connectionID, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred);
+    boost::asio::read_until(connectionID->socket, connectionID->buffer, "\n");
 
-    boost::asio::async_read_until(connectionID->socket, connectionID->buffer, "\n", handler);
+    //boost::system::error_code ignored_error;
+    std::string client_message = handle_read(connectionID, connectionID->buffer.size());
+
+    //return an enum corresponding to the relevant function or -1 if not a valid function.
+    std::string delim = " ";
+    //Pop off first function argument.
+    std::string serverFunctionToken = client_message.substr(0, client_message.find(delim));;    
+    client_message.erase(0,client_message.find(delim) + delim.length());
+
+
+    if(serverFunctionToken.compare("login") == 0)
+    {
+        while(client_message.length() > 0)
+        {
+            //Pop off next argument
+            std:: cout << "Arg: " << client_message.substr(0, client_message.find(delim)) << std::endl;
+            args->push_back(client_message.substr(0, client_message.find(delim)));
+            client_message.erase(0,client_message.find(delim) + delim.length());
+        }
+
+        return login;
+    }
+    else if(serverFunctionToken.compare("newuser") == 0)
+    {
+        while(client_message.length() > 0)
+        {
+            //Pop off next argument
+            std:: cout << "Arg: " << client_message.substr(0, client_message.find(delim)) << std::endl;
+            args->push_back(client_message.substr(0, client_message.find(delim)));
+            client_message.erase(0,client_message.find(delim) + delim.length());
+        }
+
+        return newuser;
+    }
+    else if(serverFunctionToken.compare("send") == 0)
+    {
+        //Pop off argument
+        std:: cout << "Arg: " << client_message << std::endl;
+        args->push_back(client_message);
+
+        return sendMessage;
+    }
+    else if(serverFunctionToken.compare("logout") == 0)
+    {
+        return logout;
+    }
+
+    return -1;
+
 }
 
-void TCPServer::handle_write(std::list<ServerTCPConnection>::iterator connectionID, std::shared_ptr<std::string> messageBuffer, boost::system::error_code const & err)
+//Not really used.
+void TCPServer::handle_write(ServerTCPConnection* connectionID, std::shared_ptr<std::string> messageBuffer, boost::system::error_code const & err)
 {
     if(!err)
     {
@@ -51,36 +97,45 @@ void TCPServer::handle_write(std::list<ServerTCPConnection>::iterator connection
     else
     {
         std::cerr << "We had an error: " << err.message() << std::endl;
-        server_connections.erase(connectionID);
     }
 }
 
-void TCPServer::handle_accept(std::list<ServerTCPConnection>::iterator connectionID, boost::system::error_code const & err)
+void TCPServer::handle_accept(ServerTCPConnection* connectionID)
 {
-    if(!err)
+    
+    std::cout << "New connection from: " << connectionID->socket.remote_endpoint().address().to_string() << "\n";
+
+    int code = -2;
+
+    while(code != logout)
     {
-        std::cout << "Connection from: " << connectionID->socket.remote_endpoint().address().to_string() << "\n";
-		std::cout << "Sending message\n";
-		auto buff = std::make_shared<std::string>( "Hello World!\r\n\r\n" );
-		auto handler = boost::bind( &TCPServer::handle_write, this, connectionID, buff, boost::asio::placeholders::error );
-		boost::asio::async_write( connectionID->socket, boost::asio::buffer( *buff ), handler );
-		do_async_read( connectionID );
+        //Have a place to store arguments.
+        std::vector<std::string> arguments;
+
+        //Read until logout.
+        code = do_read( connectionID , &arguments);
+
+        auto buff = std::make_shared<std::string>( "Hello World!\r\n\r\n" );
+        boost::system::error_code ignored_error;
+
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
     }
-    else
-    {
-        std::cerr << "Unexpected error: " << err.message() << std::endl;
-        server_connections.erase(connectionID);
-    }
-    start_accept();
+    
 }
 
 void TCPServer::start_accept()
 {
-    auto connectionID = server_connections.emplace(server_connections.begin(), server_ioservice);
+    //Iterative server loop for only one client at a time.
 
-    auto handler = boost::bind(&TCPServer::handle_accept, this, connectionID, boost::asio::placeholders::error);
+    for(;;)
+    {
+        ServerTCPConnection connection(server_ioservice);
 
-    server_acceptor.async_accept(connectionID->socket, handler);
+        //Block until it is possible to accept a connection.
+        server_acceptor.accept(connection.socket);
+
+        handle_accept(&connection);
+    }
 }
 
 void TCPServer::listen(int port)
