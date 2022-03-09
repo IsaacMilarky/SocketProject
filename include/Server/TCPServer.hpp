@@ -1,6 +1,11 @@
 #include "ServerTCPConnection.hpp"
 #include "ServerFunctions.hpp"
 #include <vector>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <deque>
 
 /*
     Encapsulates the function of an async tcp server running on a port.

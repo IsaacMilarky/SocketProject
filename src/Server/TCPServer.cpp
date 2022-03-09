@@ -34,52 +34,49 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
     //boost::system::error_code ignored_error;
     std::string client_message = handle_read(connectionID, connectionID->buffer.size());
 
+
+    std::stringstream streamData(client_message);
     //return an enum corresponding to the relevant function or -1 if not a valid function.
-    std::string delim = " ";
-    //Pop off first function argument.
-    std::string serverFunctionToken = client_message.substr(0, client_message.find(delim));;    
-    client_message.erase(0,client_message.find(delim) + delim.length());
+    const char delim = ' ';
+    std::string token;
 
+    std::getline(streamData,token, delim);
+    
 
-    if(serverFunctionToken.compare("login") == 0)
+    if(token.compare("login") == 0)
     {
-        while(client_message.length() > 0)
+        while(std::getline(streamData, token, delim))
         {
-            //Pop off next argument
-            std:: cout << "Arg: " << client_message.substr(0, client_message.find(delim)) << std::endl;
-            args->push_back(client_message.substr(0, client_message.find(delim)));
-            client_message.erase(0,client_message.find(delim) + delim.length());
+            std::cout << "Arg: " << token << std::endl;
+            args->push_back(token);
         }
-
+        
         return login;
     }
-    else if(serverFunctionToken.compare("newuser") == 0)
+    else if(token.compare("newuser") == 0)
     {
-        while(client_message.length() > 0)
+        while(std::getline(streamData, token, delim))
         {
-            //Pop off next argument
-            std:: cout << "Arg: " << client_message.substr(0, client_message.find(delim)) << std::endl;
-            args->push_back(client_message.substr(0, client_message.find(delim)));
-            client_message.erase(0,client_message.find(delim) + delim.length());
+            std::cout << "Arg: " << token << std::endl;
+            args->push_back(token);
         }
 
         return newuser;
-    }
-    else if(serverFunctionToken.compare("send") == 0)
+    }   
+    else if(token.compare("send") == 0)
     {
-        //Pop off argument
-        std:: cout << "Arg: " << client_message << std::endl;
+        std::cout << "Arg: " << client_message << std::endl;
         args->push_back(client_message);
 
         return sendMessage;
     }
-    else if(serverFunctionToken.compare("logout") == 0)
+    else if(token.compare("logout") == 0)
     {
         return logout;
     }
 
-    return -1;
 
+    return -1;
 }
 
 //Not really used.
