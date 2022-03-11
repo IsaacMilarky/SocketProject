@@ -1,9 +1,45 @@
 #include "../../include/Server/TCPServer.hpp"
 #include <boost/system/detail/error_code.hpp>
+#include <sstream>
+#include <string>
 
 TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice )
 {
+    //Get username password pairs from file
+    std::ifstream usertext("../users.txt");
 
+    if(usertext.is_open())
+    {
+        std::string line;
+
+        while(std::getline(usertext,line))
+        {
+            std::cout << "Got line: " << line << std::endl;
+
+            const char delim = ',';
+            std::string token;
+            std::stringstream userLine(line);
+
+            std::getline(userLine,token,delim);
+
+            std::string user = token;
+            //Remove the first character for user.
+            user.erase(user.begin());
+
+            std::cout << "user: " << user << std::endl;
+            std::getline(userLine,token,delim);
+
+            std::string password = token;
+
+            password.erase(password.end());
+
+            std::cout << "Password: " << password << std::endl;
+        }
+
+
+        usertext.close();
+
+    }
 }
 
 
@@ -120,6 +156,14 @@ void TCPServer::handle_accept(ServerTCPConnection* connectionID)
         boost::system::error_code ignored_error;
 
         boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+
+
+        switch(code)
+        {
+            case login:
+                handle_login(arguments.at(0), arguments.at(1), connectionID);
+                break;
+        }
     }
     
 }
@@ -148,6 +192,14 @@ void TCPServer::listen(int port)
     server_acceptor.listen();
     start_accept();
 }
+
+
+void TCPServer::handle_login(std::string userID, std::string password, ServerTCPConnection * connectionID)
+{
+
+}
+
+
 
 void TCPServer::run()
 {

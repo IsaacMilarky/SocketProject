@@ -1,11 +1,11 @@
 #include "ServerTCPConnection.hpp"
-#include "ServerFunctions.hpp"
 #include <vector>
 #include <sstream>
+#include <fstream>
 #include <algorithm>
 #include <iterator>
 #include <string>
-#include <deque>
+#include <map>
 
 /*
     Encapsulates the function of an async tcp server running on a port.
@@ -20,6 +20,9 @@ class TCPServer
 {
     boost::asio::io_service server_ioservice;
     boost::asio::ip::tcp::acceptor server_acceptor;
+
+    std::map<std::string,std::string> usernamePasswordPairs;
+
     
 public:
 
@@ -36,7 +39,7 @@ public:
     //listen on ports
     void listen(int);
 
-
+    void handle_login(std::string,std::string,ServerTCPConnection *);
 
 
     void run();
