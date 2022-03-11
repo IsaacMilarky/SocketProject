@@ -34,6 +34,7 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
     //boost::system::error_code ignored_error;
     std::string client_message = handle_read(connectionID, connectionID->buffer.size());
 
+    client_message.pop_back();
 
     std::stringstream streamData(client_message);
     //return an enum corresponding to the relevant function or -1 if not a valid function.
@@ -42,6 +43,9 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
 
     std::getline(streamData,token, delim);
     
+    //std::cout << "Token: " << token << std::endl;
+
+    //std::cout << "Compare: " << token.compare("logout") << std::endl;
 
     if(token.compare("login") == 0)
     {
