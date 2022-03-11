@@ -13,6 +13,9 @@
     Written by Isaac Milarsky 3/8/2022
 */
 
+enum function {login,newuser,sendMessage, logout}; 
+
+
 class TCPServer
 {
     boost::asio::io_service server_ioservice;
@@ -32,6 +35,9 @@ public:
 
     //listen on ports
     void listen(int);
+
+
+
 
     void run();
 };

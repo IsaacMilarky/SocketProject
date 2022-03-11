@@ -7,8 +7,7 @@
 #include <boost/asio.hpp>
 
 /*
-    Simple struct with allocator constructors to allow program to .emplace connections into list using an io_service object
-
+    Simple struct with allocator constructors 
     Adds buffer object to enclose socket with the data going through it.
     
     Created by Isaac Milarsky 3/8/2022
