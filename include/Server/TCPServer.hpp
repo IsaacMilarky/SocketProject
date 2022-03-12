@@ -27,6 +27,7 @@ class TCPServer
 public:
 
     TCPServer();
+    ~TCPServer();
 
     std::string handle_read(ServerTCPConnection*, size_t );
     int do_read(ServerTCPConnection*, std::vector<std::string>*);

@@ -1,5 +1,6 @@
 #include "../../include/Server/TCPServer.hpp"
 #include <boost/system/detail/error_code.hpp>
+#include <fstream>
 #include <sstream>
 #include <string>
 
@@ -48,6 +49,30 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
         usertext.close();
 
     }
+}
+
+TCPServer::~TCPServer()
+{
+    std::ofstream usertext("../users.txt",std::ofstream::trunc);
+
+    if(usertext.is_open())
+    {
+        //Write map to file
+        std::map<std::string,std::string>::iterator iter = usernamePasswordPairs.begin();
+
+        while(iter != usernamePasswordPairs.end())
+        {
+            usertext << "(" << iter->first << ", " << iter->second << ")\n";
+            iter++;
+        }
+
+        usertext.close();
+    }
+    else
+        std::cout << "Unable to write users and passwords to file" << std::endl;
+
+
+    
 }
 
 
