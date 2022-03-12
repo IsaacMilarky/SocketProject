@@ -55,25 +55,6 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
 
 TCPServer::~TCPServer()
 {
-    std::ofstream usertext("../users.txt",std::ofstream::trunc);
-
-    if(usertext.is_open())
-    {
-        //Write map to file
-        std::map<std::string,std::string>::iterator iter = usernamePasswordPairs.begin();
-
-        while(iter != usernamePasswordPairs.end())
-        {
-            usertext << "(" << iter->first << ", " << iter->second << ")\n";
-            iter++;
-        }
-
-        usertext.close();
-    }
-    else
-        std::cout << "Unable to write users and passwords to file" << std::endl;
-
-
     
 }
 
@@ -140,6 +121,13 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
     }   
     else if(token.compare("send") == 0)
     {
+        size_t pos = client_message.find("send");
+
+        if(pos != std::string::npos)
+        {
+            client_message.erase(pos,4);
+        }
+        
         std::cout << "Arg: " << client_message << std::endl;
         args->push_back(client_message);
 
@@ -216,6 +204,30 @@ void TCPServer::listen(int port)
 }
 
 
+void TCPServer::save_users_to_file()
+{
+    std::cout << "Got here" << std::endl;
+    std::ofstream usertext("../users.txt",std::ofstream::trunc);
+
+    if(usertext.is_open())
+    {
+        //Write map to file
+        std::map<std::string,std::string>::iterator iter = usernamePasswordPairs.begin();
+
+        while(iter != usernamePasswordPairs.end())
+        {
+            usertext << "(" << iter->first << ", " << iter->second << ")\n";
+            iter++;
+        }
+
+        usertext.close();
+    }
+    else
+        std::cout << "Unable to write users and passwords to file" << std::endl;
+}
+
+
+
 void TCPServer::handle_login(std::string userID, std::string password, ServerTCPConnection * connectionID)
 {
     if(usernamePasswordPairs.count(userID) && usernamePasswordPairs[userID].compare(password) == 0)
@@ -255,6 +267,8 @@ void TCPServer::handle_newuser(std::string userID, std::string password, ServerT
         auto buff = std::make_shared<std::string>( "New user account created. Please login.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+
+        save_users_to_file();
     }
 
     
@@ -282,9 +296,9 @@ void TCPServer::handle_send(std::string message, ServerTCPConnection * connectio
     if(userLoggedin)
     {
         //Send to client (Version 1 is only one client version 2 would send to all connected clients)
-        std::cout << userID << ": " << message << std::endl;
+        std::cout << userID << ":" << message << std::endl;
 
-        auto buff = std::make_shared<std::string>( userID + ": " + message + "\r\n" );
+        auto buff = std::make_shared<std::string>( userID + ":" + message + "\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
     }
@@ -306,7 +320,7 @@ void TCPServer::handle_logout(ServerTCPConnection * connectionID)
         if(iter->second != nullptr && connectionID->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
         {
             userloginStatus[iter->first] = nullptr;
-            std::cout << iter->first << " logout." << std::endl;
+            std::cout << iter->first << " left." << std::endl;
 
             break;
         }

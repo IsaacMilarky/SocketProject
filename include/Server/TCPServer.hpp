@@ -38,6 +38,8 @@ public:
     //listen on ports
     void listen(int);
 
+    void save_users_to_file();
+
     void handle_login(std::string,std::string,ServerTCPConnection *);
     void handle_newuser(std::string,std::string,ServerTCPConnection*);
     void handle_send(std::string,ServerTCPConnection*);
