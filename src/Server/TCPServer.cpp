@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <map>
 
 TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice )
 {
@@ -43,6 +44,7 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
             //std::cout << "Password: " << password << std::endl;
 
             usernamePasswordPairs[user] = password;
+            userloginStatus[user] = nullptr;
         }
 
 
@@ -152,24 +154,6 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
     return -1;
 }
 
-//Not really used.
-void TCPServer::handle_write(ServerTCPConnection* connectionID, std::shared_ptr<std::string> messageBuffer, boost::system::error_code const & err)
-{
-    if(!err)
-    {
-        std::cout << "Message sent\n";
-
-        if( connectionID->socket.is_open())
-        {
-
-        }
-    }
-    else
-    {
-        std::cerr << "We had an error: " << err.message() << std::endl;
-    }
-}
-
 void TCPServer::handle_accept(ServerTCPConnection* connectionID)
 {
     
@@ -196,6 +180,16 @@ void TCPServer::handle_accept(ServerTCPConnection* connectionID)
             case login:
                 handle_login(arguments.at(0), arguments.at(1), connectionID);
                 break;
+            case newuser:
+                handle_newuser(arguments.at(0), arguments.at(1), connectionID);
+                break;
+            case sendMessage:
+                handle_send(arguments.at(0), connectionID);
+                break;
+            case logout:
+                break;
+            default:
+                std::cout << "Error occured" << std::endl;
         }
     }
     
@@ -229,6 +223,60 @@ void TCPServer::listen(int port)
 
 void TCPServer::handle_login(std::string userID, std::string password, ServerTCPConnection * connectionID)
 {
+    if(usernamePasswordPairs.count(userID) && usernamePasswordPairs[userID].compare(password) == 0)
+    {
+        userloginStatus[userID] = connectionID;
+
+        auto buff = std::make_shared<std::string>( "login confirmed\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+
+        std::cout << userID << " login." << std::endl;
+    }
+    else
+    {
+        //Denied. User name or password incorrect.
+        auto buff = std::make_shared<std::string>( "Denied. User name or password incorrect.\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+    }
+}
+
+void TCPServer::handle_newuser(std::string userID, std::string password, ServerTCPConnection * connectionID)
+{
+    if(usernamePasswordPairs.count(userID))
+    {
+        auto buff = std::make_shared<std::string>( "Denied. User account already exists.\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+        
+    }
+    else
+    {
+        usernamePasswordPairs[userID] = password;
+
+
+        std::cout << "New user account created." << std::endl;
+        auto buff = std::make_shared<std::string>( "New user account created. Please login.\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+    }
+
+    
+
+}
+
+void TCPServer::handle_send(std::string message, ServerTCPConnection * connectionID)
+{
+    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
+
+    bool userLoggedin = false;
+
+    while(iter != userloginStatus.end())
+    {
+        
+        iter++;
+    }
 
 }
 

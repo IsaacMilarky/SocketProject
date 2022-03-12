@@ -22,7 +22,7 @@ class TCPServer
     boost::asio::ip::tcp::acceptor server_acceptor;
 
     std::map<std::string,std::string> usernamePasswordPairs;
-
+    std::map<std::string,ServerTCPConnection*> userloginStatus;
     
 public:
 
@@ -32,8 +32,6 @@ public:
     std::string handle_read(ServerTCPConnection*, size_t );
     int do_read(ServerTCPConnection*, std::vector<std::string>*);
 
-    void handle_write(ServerTCPConnection*, std::shared_ptr<std::string>, boost::system::error_code const &);
-
     void handle_accept(ServerTCPConnection*);
     void start_accept();
 
@@ -41,7 +39,8 @@ public:
     void listen(int);
 
     void handle_login(std::string,std::string,ServerTCPConnection *);
-
+    void handle_newuser(std::string,std::string,ServerTCPConnection*);
+    void handle_send(std::string,ServerTCPConnection*);
 
     void run();
 };
