@@ -1,15 +1,10 @@
 #include <iostream>
 #include <boost/asio.hpp>
+#include <boost/array.hpp>
 
-int main(int argc, char ** argv)
+int main()
 {
-    boost::asio::io_context io;
-
-    boost::asio::steady_timer t(io, boost::asio::chrono::seconds(5));
-
-    t.wait();
-
-    std::cout << "Hello, world!" << std::endl;
+    std::cout << "My chat room client. Version one." << std::endl;
     
     return 0;
 }

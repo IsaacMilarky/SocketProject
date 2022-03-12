@@ -145,7 +145,7 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
 void TCPServer::handle_accept(ServerTCPConnection* connectionID)
 {
     
-    std::cout << "New connection from: " << connectionID->socket.remote_endpoint().address().to_string() << "\n";
+    //std::cout << "New connection from: " << connectionID->socket.remote_endpoint().address().to_string() << "\n";
 
     int code = -2;
 
@@ -206,7 +206,6 @@ void TCPServer::listen(int port)
 
 void TCPServer::save_users_to_file()
 {
-    std::cout << "Got here" << std::endl;
     std::ofstream usertext("../users.txt",std::ofstream::trunc);
 
     if(usertext.is_open())
