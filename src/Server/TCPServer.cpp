@@ -169,12 +169,6 @@ void TCPServer::handle_accept(ServerTCPConnection* connectionID)
         //Read until logout.
         code = do_read( connectionID , &arguments);
 
-        auto buff = std::make_shared<std::string>( "Hello World!\r\n\r\n" );
-        boost::system::error_code ignored_error;
-
-        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
-
-
         switch(code)
         {
             case login:
@@ -187,6 +181,7 @@ void TCPServer::handle_accept(ServerTCPConnection* connectionID)
                 handle_send(arguments.at(0), connectionID);
                 break;
             case logout:
+                handle_logout(connectionID);
                 break;
             default:
                 std::cout << "Error occured" << std::endl;
@@ -271,15 +266,53 @@ void TCPServer::handle_send(std::string message, ServerTCPConnection * connectio
     std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
 
     bool userLoggedin = false;
+    std::string userID = "";
 
     while(iter != userloginStatus.end())
     {
-        
+        if(iter->second != nullptr && connectionID->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        {
+            userLoggedin = true;
+            userID = iter->first;
+            break;
+        }
         iter++;
+    }
+
+    if(userLoggedin)
+    {
+        //Send to client (Version 1 is only one client version 2 would send to all connected clients)
+        std::cout << userID << ": " << message << std::endl;
+
+        auto buff = std::make_shared<std::string>( userID + ": " + message + "\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+    }
+    else
+    {
+        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
     }
 
 }
 
+void TCPServer::handle_logout(ServerTCPConnection * connectionID)
+{
+    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
+
+    while(iter != userloginStatus.end())
+    {
+        if(iter->second != nullptr && connectionID->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        {
+            userloginStatus[iter->first] = nullptr;
+            std::cout << iter->first << " logout." << std::endl;
+
+            break;
+        }
+        iter++;
+    }
+}
 
 
 void TCPServer::run()
