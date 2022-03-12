@@ -24,16 +24,24 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
 
             std::string user = token;
             //Remove the first character for user.
-            user.erase(user.begin());
+            user.erase(remove(user.begin(), user.end(), ' '), user.end());
+            user.erase(remove(user.begin(), user.end(), '('), user.end());
+            user.erase(remove(user.begin(), user.end(), ')'), user.end());
 
-            std::cout << "user: " << user << std::endl;
+            //std::cout << "user: " << user << std::endl;
             std::getline(userLine,token,delim);
 
             std::string password = token;
 
-            password.erase(password.end());
+            password.erase(password.length() - 1);
 
-            std::cout << "Password: " << password << std::endl;
+            password.erase(remove(password.begin(), password.end(), ' '), password.end());
+            password.erase(remove(password.begin(), password.end(), '('), password.end());
+            password.erase(remove(password.begin(), password.end(), ')'), password.end());
+
+            //std::cout << "Password: " << password << std::endl;
+
+            usernamePasswordPairs[user] = password;
         }
 
 
