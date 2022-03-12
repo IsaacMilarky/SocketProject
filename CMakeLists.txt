@@ -29,7 +29,7 @@ ENDIF(Boost_FOUND)
 
 SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY})
 
-add_executable(Client client.cpp)
+add_executable(Client client.cpp src/Client/TCPClient.cpp)
 
 target_link_libraries(Client ${USED_LIBS})
 
