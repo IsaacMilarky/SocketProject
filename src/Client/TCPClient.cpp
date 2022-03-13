@@ -91,6 +91,7 @@ void TCPClient::terminate_connection()
 
 void TCPClient::handle_login(std::vector<std::string> * argList)
 {
+    std::cout << "Arglist: " << argList->size() << std::endl;
     if(argList->size() == 2)
     {
         auto buff = std::make_shared<std::string>( "login " + argList->at(0) + " " + argList->at(1) + " \r\n" );
@@ -135,4 +136,27 @@ void TCPClient::handle_send(std::string message)
     }
 
     std::cout << "Incorrect usage of send!" << std::endl;
+}
+
+
+std::string TCPClient::wait_for_response()
+{
+    boost::asio::read_until(chatConnection.socket, chatConnection.buffer, "\n");
+
+    std::string line;
+
+    if(chatConnection.buffer.size() > 0)
+    {
+        std::istream is( &chatConnection.buffer);
+
+        std::getline(is, line);
+
+        std::cout << "[Connection] has received message: \n \t" << line << std::endl;
+
+    }
+    else {
+        line = "";
+    }
+
+    return line;
 }

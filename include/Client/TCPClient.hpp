@@ -28,4 +28,6 @@ public:
 
     void handle_send(std::string);
 
+    std::string wait_for_response();
+
 };

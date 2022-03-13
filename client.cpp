@@ -4,6 +4,7 @@
 #include <boost/array.hpp>
 #include <boost/chrono.hpp>
 #include <boost/thread/thread.hpp> 
+#include <string>
 #include "include/Client/TCPClient.hpp"
 
 int main()
@@ -17,12 +18,13 @@ int main()
     while(userInput != "exit")
     {
         std::cout << ">";
-        std::cin >> userInput;
+        std::getline(std::cin,userInput);
         std::cout << std::endl;
 
         client.parse_user_message(userInput);
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 
+        std::cout << client.wait_for_response();
         
     }
 
