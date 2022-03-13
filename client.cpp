@@ -14,16 +14,18 @@ int main()
 
     std::string userInput = "";
 
-    while(userInput != "logout")
+    while(userInput != "exit")
     {
         std::cout << ">";
         std::cin >> userInput;
         std::cout << std::endl;
 
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+        client.parse_user_message(userInput);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 
         
     }
+
 
     return 0;
 }

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iterator>
 #include <string>
+#include <vector>
 
 
 class TCPClient
@@ -17,5 +18,14 @@ class TCPClient
 
 public:
     TCPClient(std::string,int);
+
+    void parse_user_message(std::string);
+
+    //Send functions
+    void terminate_connection();
+    void handle_login(std::vector<std::string>*);
+    void handle_newuser(std::vector<std::string>*);
+
+    void handle_send(std::string);
 
 };
