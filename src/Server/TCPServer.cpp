@@ -81,63 +81,73 @@ std::string TCPServer::handle_read(ServerTCPConnection* connectionID, size_t byt
 
 int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::string>* args)
 {
-    boost::asio::read_until(connectionID->socket, connectionID->buffer, "\n");
+    try
+    {
+        boost::asio::read_until(connectionID->socket, connectionID->buffer, "\n");
 
-    //boost::system::error_code ignored_error;
-    std::string client_message = handle_read(connectionID, connectionID->buffer.size());
+        //boost::system::error_code ignored_error;
+        std::string client_message = handle_read(connectionID, connectionID->buffer.size());
 
-    client_message.pop_back();
 
-    std::stringstream streamData(client_message);
-    //return an enum corresponding to the relevant function or -1 if not a valid function.
-    const char delim = ' ';
-    std::string token;
+        client_message.pop_back();
 
-    std::getline(streamData,token, delim);
+        std::stringstream streamData(client_message);
+        //return an enum corresponding to the relevant function or -1 if not a valid function.
+        const char delim = ' ';
+        std::string token;
+
+        std::getline(streamData,token, delim);
     
-    //std::cout << "Token: " << token << std::endl;
+        //std::cout << "Token: " << token << std::endl;
 
-    //std::cout << "Compare: " << token.compare("logout") << std::endl;
+        //std::cout << "Compare: " << token.compare("logout") << std::endl;
 
-    if(token.compare("login") == 0)
-    {
-        while(std::getline(streamData, token, delim))
+        if(token.compare("login") == 0)
         {
-            std::cout << "Arg: " << token << std::endl;
-            args->push_back(token);
+            while(std::getline(streamData, token, delim))
+            {
+                std::cout << "Arg: " << token << std::endl;
+                args->push_back(token);
+            }
+
+            return login;
         }
-        
-        return login;
+        else if(token.compare("newuser") == 0)
+        {
+            while(std::getline(streamData, token, delim))
+            {
+                std::cout << "Arg: " << token << std::endl;
+                args->push_back(token);
+            }
+
+            return newuser;
+        }   
+        else if(token.compare("send") == 0)
+        {
+            size_t pos = client_message.find("send");
+
+            if(pos != std::string::npos)
+            {
+                client_message.erase(pos,4);
+            }
+
+            std::cout << "Arg: " << client_message << std::endl;
+            args->push_back(client_message);
+
+            return sendMessage;
+        }
+        else if(token.compare("logout") == 0)
+        {
+            return logout;
+        }
     }
-    else if(token.compare("newuser") == 0)
+    catch (const std::exception &e)
     {
-        while(std::getline(streamData, token, delim))
-        {
-            std::cout << "Arg: " << token << std::endl;
-            args->push_back(token);
-        }
-
-        return newuser;
-    }   
-    else if(token.compare("send") == 0)
-    {
-        size_t pos = client_message.find("send");
-
-        if(pos != std::string::npos)
-        {
-            client_message.erase(pos,4);
-        }
-        
-        std::cout << "Arg: " << client_message << std::endl;
-        args->push_back(client_message);
-
-        return sendMessage;
-    }
-    else if(token.compare("logout") == 0)
-    {
+        std::cerr << "Connection terminated before client sent data!" << std::endl;
+        std::cerr << e.what() << std::endl;
         return logout;
     }
-
+    
 
     return -1;
 }
