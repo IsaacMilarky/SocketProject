@@ -69,7 +69,7 @@ std::string TCPServer::handle_read(ServerTCPConnection* connectionID, size_t byt
 
         std::getline(is, line);
 
-        std::cout << "[Connection] has received message: \n \t" << line << std::endl;
+        //std::cout << "[Connection] has received message: \n \t" << line << std::endl;
 
     }
     else {

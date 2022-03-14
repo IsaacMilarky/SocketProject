@@ -22,9 +22,7 @@ int main()
         std::cout << std::endl;
 
         client.parse_user_message(userInput);
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-
-        std::cout << client.wait_for_response();
+        //boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
         
     }
 

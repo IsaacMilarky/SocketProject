@@ -26,13 +26,13 @@ void TCPClient::parse_user_message(std::string userMessage)
 
     functionIdentifier = token;
     
-    std::cout << functionIdentifier << std::endl;
-    std::cout << token << std::endl;
-    std::cout << userMessage << std::endl;
+    //std::cout << functionIdentifier << std::endl;
+    //std::cout << token << std::endl;
+    //std::cout << userMessage << std::endl;
 
     std::vector<std::string> argList;
 
-    if(functionIdentifier.compare("login") == 0)
+    if(token.compare("login") == 0)
     {
         while(std::getline(messageStream, token, delim))
         {
@@ -41,20 +41,21 @@ void TCPClient::parse_user_message(std::string userMessage)
         }
 
         handle_login(&argList);
+        
         return;
     }
-    else if(functionIdentifier.compare("newuser") == 0)
+    else if(token.compare("newuser") == 0)
     {
         while(std::getline(messageStream, token, delim))
         {
-            std::cout << "Arg: " << token << std::endl;
+            //std::cout << "Arg: " << token << std::endl;
             argList.push_back(token);
         }
 
         handle_newuser(&argList);
         return;
     }   
-    else if(functionIdentifier.compare("send") == 0)
+    else if(token.compare("send") == 0)
     {
         std::string bigArg = userMessage;
         size_t pos = bigArg.find("send");
@@ -62,14 +63,14 @@ void TCPClient::parse_user_message(std::string userMessage)
         {
             bigArg.erase(pos,4);
         }
-        std::cout << "Arg: " << bigArg << std::endl;
+        //std::cout << "Arg: " << bigArg << std::endl;
         //argList.push_back(bigArg);
 
         handle_send(bigArg);
 
         return;
     }
-    else if(functionIdentifier.compare("logout") == 0)
+    else if(token.compare("logout") == 0)
     {
         terminate_connection();
 
@@ -97,6 +98,8 @@ void TCPClient::handle_login(std::vector<std::string> * argList)
         auto buff = std::make_shared<std::string>( "login " + argList->at(0) + " " + argList->at(1) + " \r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( chatConnection.socket, boost::asio::buffer( *buff ), ignored_error );
+
+        std::cout << wait_for_response() << std::endl;
     }
     else
     {
@@ -116,6 +119,8 @@ void TCPClient::handle_newuser(std::vector<std::string> * argList)
             auto buff = std::make_shared<std::string>( "newuser " + argList->at(0) + " " + argList->at(1) + " \r\n" );
             boost::system::error_code ignored_error;
             boost::asio::write( chatConnection.socket, boost::asio::buffer( *buff ), ignored_error );
+
+            std::cout << wait_for_response() << std::endl;
             return;
         }
     }
@@ -127,11 +132,13 @@ void TCPClient::handle_newuser(std::vector<std::string> * argList)
 
 void TCPClient::handle_send(std::string message)
 {
-    if(message.length() >= 1 && message.length() <= 256)
+    if(message.length() <= 256)
     {
         auto buff = std::make_shared<std::string>("send " + message + " \r\n");
         boost::system::error_code ignored_error;
         boost::asio::write(chatConnection.socket,boost::asio::buffer(*buff),ignored_error);
+
+        std::cout << wait_for_response() << std::endl;
         return;
     }
 
@@ -151,7 +158,7 @@ std::string TCPClient::wait_for_response()
 
         std::getline(is, line);
 
-        std::cout << "[Connection] has received message: \n \t" << line << std::endl;
+        //std::cout << line << std::endl;
 
     }
     else {
