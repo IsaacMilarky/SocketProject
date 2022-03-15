@@ -7,7 +7,7 @@
 #include "include/TCPServer.hpp"
 
 /*
-    Name: Isaac Milarsky
+    Name: Isaac Milarsky (imfbp)
     Date: 3/15/2022
     Program Description:
         This implements a simple TCP server using Boost.asio with only synchronous socket API

@@ -144,12 +144,16 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
         {
             return logout;
         }
+        else if(token.compare("exit") == 0)
+        {
+            return exitFunction;
+        }
     }
     catch (const std::exception &e)
     {
         std::cerr << "Connection terminated before client sent data!" << std::endl;
         std::cerr << e.what() << std::endl;
-        return logout;
+        return exitFunction;
     }
     
 
@@ -164,7 +168,7 @@ void TCPServer::handle_accept(ServerTCPConnection* connectionID)
 
     int code = -2;
 
-    while(code != logout)
+    while(code != exitFunction)
     {
         //Have a place to store arguments.
         std::vector<std::string> arguments;
@@ -186,6 +190,8 @@ void TCPServer::handle_accept(ServerTCPConnection* connectionID)
                 break;
             case logout:
                 handle_logout(connectionID);
+                break;
+            case exitFunction:
                 break;
             default:
                 std::cout << "Error occured" << std::endl;
@@ -388,8 +394,10 @@ void TCPServer::handle_send(std::string message, ServerTCPConnection * connectio
 
 }
 
+//Perform the logout function and respond to the connection that made it.
 void TCPServer::handle_logout(ServerTCPConnection * connectionID)
 {
+    //First figure out if the connection is logged in and record the name if it is.
     std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
     bool userWasLoggedIn = false;
     std::string name = "";
@@ -398,8 +406,11 @@ void TCPServer::handle_logout(ServerTCPConnection * connectionID)
     {
         if(iter->second != nullptr && connectionID->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
         {
+            //Log them out here if they are logged in.
             userloginStatus[iter->first] = nullptr;
             std::cout << iter->first << " logout." << std::endl;
+
+            //They were logged in, send a success message later on.
             userWasLoggedIn = true;
             name = iter->first;
             break;
@@ -407,6 +418,7 @@ void TCPServer::handle_logout(ServerTCPConnection * connectionID)
         iter++;
     }
 
+    //Send success if suceeded.
     if(userWasLoggedIn)
     {
         auto buff = std::make_shared<std::string>( name + " left.\r\n" );

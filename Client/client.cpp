@@ -8,6 +8,16 @@
 #include <memory>
 #include "include/TCPClient.hpp"
 
+/*
+    Name: Isaac Milarsky (imfbp)
+    Date: 3/15/2022
+    Program Description:
+        This implements a simple synchronous TCP client in Boost.asio.
+        Connection to server is established at program start.
+
+*/
+
+
 int main()
 {
     std::cout << "My chat room client. Version one." << std::endl;
@@ -27,6 +37,7 @@ int main()
 
     std::string userInput = "";
 
+    //Get and parse user input until they tell us they want to exit.
     while(userInput != "exit")
     {
         std::cout << ">";

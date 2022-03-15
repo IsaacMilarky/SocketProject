@@ -6,14 +6,23 @@
 #include <string>
 #include <vector>
 
+/*
+    Encapsulates the function of a TCP client connection
+
+    Written by Isaac Milarsky 3/11/2022
+*/
 
 class TCPClient
 {
 
+    //Boost object representing OS io functionality and service.
+    //Create sockets from this OS independent io object.
     boost::asio::io_service client_io_service;
 
+    //The target for the client.
     boost::asio::ip::tcp::endpoint target_host_endpoint;
 
+    //The socket and buffer for the connection.
     ServerTCPConnection chatConnection;
 
 public:
@@ -27,6 +36,8 @@ public:
     void handle_newuser(std::vector<std::string>*);
 
     void handle_send(std::string);
+
+    void handle_logout();
 
     std::string wait_for_response();
 
