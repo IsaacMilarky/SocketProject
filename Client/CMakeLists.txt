@@ -1,13 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 #Set the project name
-project(SocketProject VERSION 0.01)
+project(SocketProject)
 enable_testing()
-
-#This part was not explained well in the tutorial.
-configure_file(
-    "${PROJECT_SOURCE_DIR}/SocketConfig.h.in"
-    "${PROJECT_SOURCE_DIR}/SocketConfig.h")
 
 #C++ 11
 set(CMAKE_CXX_STANDARD 11)
@@ -29,12 +24,8 @@ ENDIF(Boost_FOUND)
 
 SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY})
 
-add_executable(Client client.cpp src/Client/TCPClient.cpp)
+add_executable(Client client.cpp src/TCPClient.cpp)
 
 target_link_libraries(Client ${USED_LIBS})
-
-add_executable(Server server.cpp src/Server/TCPServer.cpp)
-
-target_link_libraries(Server ${USED_LIBS})
 
 #install(TARGETS Splits DESTINATION bin)

@@ -1,4 +1,4 @@
-#include "../ServerTCPConnection.hpp"
+#include "ServerTCPConnection.hpp"
 #include <vector>
 #include <sstream>
 #include <fstream>

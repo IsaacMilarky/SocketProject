@@ -1,4 +1,4 @@
-#include "../ServerTCPConnection.hpp"
+#include "ServerTCPConnection.hpp"
 #include <boost/asio/ip/address.hpp>
 #include <sstream>
 #include <algorithm>

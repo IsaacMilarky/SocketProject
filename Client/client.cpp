@@ -6,7 +6,7 @@
 #include <boost/thread/thread.hpp> 
 #include <string>
 #include <memory>
-#include "include/Client/TCPClient.hpp"
+#include "include/TCPClient.hpp"
 
 int main()
 {
