@@ -36,7 +36,7 @@ void TCPClient::parse_user_message(std::string userMessage)
     {
         while(std::getline(messageStream, token, delim))
         {
-            std::cout << "Arg: " << token << std::endl;
+            //std::cout << "Arg: " << token << std::endl;
             argList.push_back(token);
         }
 
@@ -92,7 +92,7 @@ void TCPClient::terminate_connection()
 
 void TCPClient::handle_login(std::vector<std::string> * argList)
 {
-    std::cout << "Arglist: " << argList->size() << std::endl;
+    //std::cout << "Arglist: " << argList->size() << std::endl;
     if(argList->size() == 2)
     {
         auto buff = std::make_shared<std::string>( "login " + argList->at(0) + " " + argList->at(1) + " \r\n" );

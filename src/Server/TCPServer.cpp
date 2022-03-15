@@ -16,7 +16,7 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
 
         while(std::getline(usertext,line))
         {
-            std::cout << "Got line: " << line << std::endl;
+            //std::cout << "Got line: " << line << std::endl;
 
             const char delim = ',';
             std::string token;
@@ -106,7 +106,7 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
         {
             while(std::getline(streamData, token, delim))
             {
-                std::cout << "Arg: " << token << std::endl;
+                //std::cout << "Arg: " << token << std::endl;
                 args->push_back(token);
             }
 
@@ -116,7 +116,7 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
         {
             while(std::getline(streamData, token, delim))
             {
-                std::cout << "Arg: " << token << std::endl;
+                //std::cout << "Arg: " << token << std::endl;
                 args->push_back(token);
             }
 
@@ -131,7 +131,7 @@ int TCPServer::do_read(ServerTCPConnection* connectionID, std::vector<std::strin
                 client_message.erase(pos,4);
             }
 
-            std::cout << "Arg: " << client_message << std::endl;
+            //std::cout << "Arg: " << client_message << std::endl;
             args->push_back(client_message);
 
             return sendMessage;
@@ -352,7 +352,7 @@ void TCPServer::handle_logout(ServerTCPConnection * connectionID)
         if(iter->second != nullptr && connectionID->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
         {
             userloginStatus[iter->first] = nullptr;
-            std::cout << iter->first << " left." << std::endl;
+            std::cout << iter->first << " logout." << std::endl;
 
             break;
         }

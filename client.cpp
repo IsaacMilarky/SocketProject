@@ -5,13 +5,25 @@
 #include <boost/chrono.hpp>
 #include <boost/thread/thread.hpp> 
 #include <string>
+#include <memory>
 #include "include/Client/TCPClient.hpp"
 
 int main()
 {
     std::cout << "My chat room client. Version one." << std::endl;
 
-    TCPClient client("127.0.0.1",14860);
+    std::unique_ptr<TCPClient> clientRef;
+
+    try
+    {
+        //TCPClient client("127.0.0.1",14860);
+        clientRef = std::unique_ptr<TCPClient>(new TCPClient("127.0.0.1",14860));
+    }
+    catch(const std::exception &e)
+    {
+        std::cerr << "Host not up or connection refused!" << std::endl;
+        return -1;
+    }
 
     std::string userInput = "";
 
@@ -21,7 +33,7 @@ int main()
         std::getline(std::cin,userInput);
         std::cout << std::endl;
 
-        client.parse_user_message(userInput);
+        clientRef->parse_user_message(userInput);
         //boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
         
     }
