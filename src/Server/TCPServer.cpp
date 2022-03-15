@@ -260,27 +260,50 @@ void TCPServer::handle_login(std::string userID, std::string password, ServerTCP
 
 void TCPServer::handle_newuser(std::string userID, std::string password, ServerTCPConnection * connectionID)
 {
-    if(usernamePasswordPairs.count(userID))
+    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
+
+    bool userLoggedin = false;
+    //std::string userName = "";
+
+    while(iter != userloginStatus.end())
     {
-        auto buff = std::make_shared<std::string>( "Denied. User account already exists.\r\n" );
-        boost::system::error_code ignored_error;
-        boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
-        
+        if(iter->second != nullptr && connectionID->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        {
+            userLoggedin = true;
+            //userName = iter->first;
+            break;
+        }
+        iter++;
+    }
+
+    if(userLoggedin)
+    {
+        if(usernamePasswordPairs.count(userID))
+        {
+            auto buff = std::make_shared<std::string>( "Denied. User account already exists.\r\n" );
+            boost::system::error_code ignored_error;
+            boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+
+        }
+        else
+        {
+            usernamePasswordPairs[userID] = password;
+
+
+            std::cout << "New user account created." << std::endl;
+            auto buff = std::make_shared<std::string>( "New user account created. Please login.\r\n" );
+            boost::system::error_code ignored_error;
+            boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
+
+            save_users_to_file();
+        }
     }
     else
     {
-        usernamePasswordPairs[userID] = password;
-
-
-        std::cout << "New user account created." << std::endl;
-        auto buff = std::make_shared<std::string>( "New user account created. Please login.\r\n" );
+        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
-
-        save_users_to_file();
     }
-
-    
 
 }
 
