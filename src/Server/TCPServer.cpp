@@ -276,7 +276,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, ServerT
         iter++;
     }
 
-    if(userLoggedin)
+    if(!userLoggedin)
     {
         if(usernamePasswordPairs.count(userID))
         {
@@ -300,7 +300,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, ServerT
     }
     else
     {
-        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
+        auto buff = std::make_shared<std::string>( "Denied. Can't create user while logged in.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( connectionID->socket, boost::asio::buffer( *buff ), ignored_error );
     }
