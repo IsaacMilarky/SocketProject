@@ -20,7 +20,7 @@
 
 int main()
 {
-    std::cout << "My chat room client. Version one." << std::endl;
+    std::cout << "My chat room client. Version Two." << std::endl;
 
     std::unique_ptr<TCPClient> clientRef;
 

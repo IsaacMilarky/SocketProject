@@ -19,7 +19,7 @@
 int main()
 {
 
-    std::cout << "My chat room server. Version One." << std::endl;
+    std::cout << "My chat room server. Version Two." << std::endl;
 
 
     //Get a reference to srv on the heap.
