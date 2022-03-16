@@ -39,6 +39,8 @@ public:
 
     void handle_logout();
 
+    void handle_who();
+
     std::string wait_for_response();
 
 };

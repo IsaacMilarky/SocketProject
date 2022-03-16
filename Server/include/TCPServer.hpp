@@ -19,7 +19,7 @@
 
 //Simple enum macro so that we return a number when parsing user packet input
 //then a switch statement is used to apply the operation after the meaning is parsed.
-enum function {login,newuser,sendMessage, logout, exitFunction }; 
+enum function {login,newuser,sendMessageAll,sendMessageUser, who, logout, exitFunction }; 
 
 
 class TCPServer
@@ -56,7 +56,9 @@ public:
     //Handle functions once meaning is parsed and respond to client.
     void handle_login(std::string,std::string,int);
     void handle_newuser(std::string,std::string,int);
-    void handle_send(std::string,int);
+    void handle_send_all(std::string,int);
+    void handle_send_user(std::string,std::string,int);
+    void handle_who(int);
     void handle_logout(int);
 
     void run();

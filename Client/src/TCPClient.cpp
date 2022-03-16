@@ -66,6 +66,11 @@ void TCPClient::parse_user_message(std::string userMessage)
 
         return;
     }
+    else if(token.compare("who") == 0)
+    {
+        handle_who();
+        return;
+    }
     else if(token.compare("logout") == 0)
     {
         //Send logout message to server.
@@ -155,6 +160,15 @@ void TCPClient::handle_send(std::string message)
 void TCPClient::handle_logout()
 {
     auto buff = std::make_shared<std::string>( "logout \r\n" );
+    boost::system::error_code ignored_error;
+    boost::asio::write( chatConnection.socket, boost::asio::buffer( *buff ), ignored_error );
+
+    std::cout << wait_for_response() << std::endl;
+}
+
+void TCPClient::handle_who()
+{
+    auto buff = std::make_shared<std::string>( "who \r\n" );
     boost::system::error_code ignored_error;
     boost::asio::write( chatConnection.socket, boost::asio::buffer( *buff ), ignored_error );
 

@@ -88,8 +88,14 @@ void TCPServer::handle_read(int connectionID,boost::system::error_code const & e
         case newuser:
             handle_newuser(arguments.at(0), arguments.at(1), connectionID);
             break;
-        case sendMessage:
-            handle_send(arguments.at(0), connectionID);
+        case sendMessageAll:
+            handle_send_all(arguments.at(0), connectionID);
+            break;
+        case sendMessageUser:
+            handle_send_user(arguments.at(0),arguments.at(1),connectionID);
+            break;
+        case who:
+            handle_who(connectionID);
             break;
         case logout:
             handle_logout(connectionID);
@@ -130,7 +136,7 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
 
         std::string client_message = line;
 
-        std::cout << "CLient message: " << line << std::endl;
+        //std::cout << "CLient message: " << line << std::endl;
 
         client_message.pop_back();
         std::stringstream streamData(client_message);
@@ -164,18 +170,37 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
         }   
         else if(token.compare("send") == 0)
         {
-            //Don't send back 'send' as part of message.
-            size_t pos = client_message.find("send");
-
-            if(pos != std::string::npos)
+            //Check if send 'all' or send.
+            std::getline(streamData,token, delim);
+            if(token.compare("all") == 0)
             {
-                client_message.erase(pos,4);
+                std::string message = "";
+
+                while(std::getline(streamData,token,delim))
+                {
+                    message += token + " ";
+                }
+                args->push_back(message);
+
+                return sendMessageAll;
             }
+            else
+            {
+                args->push_back(token);
+                std::string message = "";
 
-            //Push back the whole message except the function specifier.
-            args->push_back(client_message);
-
-            return sendMessage;
+                while(std::getline(streamData,token,delim))
+                {
+                    message += token + " ";
+                }
+                args->push_back(message);
+                return sendMessageUser;
+            }
+            
+        }
+        else if(token.compare("who") == 0)
+        {
+            return who;
         }
         else if(token.compare("logout") == 0)
         {
@@ -391,7 +416,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, int con
 }
 
 //Perform the send function and respond to the connection that made it.
-void TCPServer::handle_send(std::string message, int connectionID)
+void TCPServer::handle_send_all(std::string message, int connectionID)
 {
     std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
 
@@ -412,12 +437,22 @@ void TCPServer::handle_send(std::string message, int connectionID)
 
     if(userLoggedin)
     {
-        //Send to client (Version 1 is only one client version 2 would send to all connected clients)
+        //Send to clients
         std::cout << userID << ":" << message << std::endl;
 
         auto buff = std::make_shared<std::string>( userID + ":" + message + "\r\n" );
         boost::system::error_code ignored_error;
-        boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+
+        for(int iter = 0; iter < MAX_CLIENTS; iter++)
+        {
+            //Check if there is an empty spot.
+            ServerTCPConnection * connectionRef = server_connections[iter].get();
+
+            if(connectionRef != nullptr)
+            {
+                boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+            }
+        }
     }
     else
     {
@@ -427,6 +462,90 @@ void TCPServer::handle_send(std::string message, int connectionID)
     }
 
 }
+
+void TCPServer::handle_send_user(std::string userDst, std::string message, int connectionID)
+{
+    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
+
+    bool userLoggedin = false;
+    //Also get the userID to send back.
+    std::string userID = "";
+
+    ServerTCPConnection * connectionRef = nullptr;
+
+    while(iter != userloginStatus.end())
+    {
+        if(iter->second != nullptr && server_connections[connectionID]->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        {
+            userLoggedin = true;
+            userID = iter->first;
+            connectionRef = iter->second;
+            break;
+        }
+        iter++;
+    }
+
+    iter = userloginStatus.begin();
+    ServerTCPConnection * dstRef = nullptr;
+    while(iter != userloginStatus.end())
+    {
+        if(iter->second != nullptr && userDst == iter->first)
+        {
+            dstRef = iter->second;
+            break;
+        }
+        iter++;
+    }
+
+    if(userLoggedin)
+    {
+        //Send to client
+        if(dstRef)
+        {
+            std::cout << userID << ":" << message << std::endl;
+
+            auto buff = std::make_shared<std::string>( userID + ":" + message + "\r\n" );
+            boost::system::error_code ignored_error;
+
+            boost::asio::write( dstRef->socket, boost::asio::buffer( *buff ), ignored_error );
+        }
+        
+    }
+    else
+    {
+        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
+        boost::system::error_code ignored_error;
+        boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+    }
+
+}
+
+
+void TCPServer::handle_who(int connectionID)
+{
+    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
+
+    std::string message = "";
+
+    while(iter != userloginStatus.end())
+    {
+        if(iter->second != nullptr )
+        {
+            
+            message += iter->first + ", ";
+        }
+        iter++;
+    }
+
+    message.pop_back();
+    message.pop_back();
+
+    auto buff = std::make_shared<std::string>( message + "\r\n" );
+    boost::system::error_code ignored_error;
+    boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+
+}
+
 
 //Perform the logout function and respond to the connection that made it.
 void TCPServer::handle_logout(int connectionID)
