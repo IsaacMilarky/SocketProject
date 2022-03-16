@@ -10,9 +10,9 @@
 
 /*
     Name: Isaac Milarsky (imfbp)
-    Date: 3/15/2022
+    Date: 3/16/2022
     Program Description:
-        This implements a simple synchronous TCP client in Boost.asio.
+        This implements a simple asynchronous TCP client in Boost.asio.
         Connection to server is established at program start.
 
 */

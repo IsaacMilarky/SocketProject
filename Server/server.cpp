@@ -10,9 +10,8 @@
     Name: Isaac Milarsky (imfbp)
     Date: 3/15/2022
     Program Description:
-        This implements a simple TCP server using Boost.asio with only synchronous socket API
-        operations. As per the instructions of version one of this project only one client is 
-        supported at a time..
+        This implements a simple TCP server using Boost.asio with asynchronous socket API
+        operations. 
 
 */
 
