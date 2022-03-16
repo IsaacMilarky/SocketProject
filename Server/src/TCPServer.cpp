@@ -68,6 +68,8 @@ void TCPServer::handle_read(int connectionID,boost::system::error_code const & e
     if(err)
     {
         std::cerr << "Connection terminated before data was read!" << std::endl;
+        server_connections[connectionID].reset();
+        start_accept();
         return;
     }
 
@@ -111,6 +113,11 @@ void TCPServer::handle_read(int connectionID,boost::system::error_code const & e
         //If message is not an exit message create a async read listener to read the next message.
         auto handler = boost::bind(&TCPServer::handle_read,this,connectionID,boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred);
         boost::asio::async_read_until(server_connections[connectionID]->socket, server_connections[connectionID]->buffer, "\n",handler);
+    }
+    else
+    {
+        server_connections[connectionID].reset();
+        start_accept();
     }
 }
 
@@ -215,6 +222,7 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
     {
         std::cerr << "Connection terminated before client sent data!" << std::endl;
         std::cerr << e.what() << std::endl;
+        server_connections[connectionID].reset();
         return exitFunction;
     }
     
@@ -251,9 +259,11 @@ void TCPServer::start_accept()
 
     for(int iter = 0; iter < MAX_CLIENTS; iter++)
     {
-        //Check if there is an empty spot.
+        //std::cout << "index " << iter << std::endl;
+       //Check if there is an empty spot.
         ServerTCPConnection * connectionRef = server_connections[iter].get();
 
+        //std::cout << connectionRef << std::endl;
         if(connectionRef == nullptr)
         {
             index = iter;
@@ -264,7 +274,8 @@ void TCPServer::start_accept()
 
     if(index == -1)
     {
-        throw;
+        std::cerr << "No more available connections!" << std::endl;
+        return;
     }
     //Create a socket and buffer from OS io object from boost.
 
