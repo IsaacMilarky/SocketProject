@@ -6,7 +6,10 @@
 #include <iterator>
 #include <string>
 #include <map>
+#include <stdexcept>
 
+
+#define MAX_CLIENTS 3
 /*
     Encapsulates the function of a sync tcp server running on a port.
 
@@ -30,16 +33,19 @@ class TCPServer
     std::map<std::string,std::string> usernamePasswordPairs;
     //Keep connections in map.
     std::map<std::string,ServerTCPConnection*> userloginStatus;
+
+    //Active connections in here. Keep in array of smart pointers.
+    std::unique_ptr<ServerTCPConnection> server_connections[MAX_CLIENTS];
     
 public:
 
     TCPServer();
     ~TCPServer();
 
-    std::string handle_read(ServerTCPConnection*, size_t );
-    int do_read(ServerTCPConnection*, std::vector<std::string>*);
+    void handle_read(int,boost::system::error_code const &, size_t );
+    int do_read(int, std::vector<std::string>*,size_t);
 
-    void handle_accept(ServerTCPConnection*);
+    void handle_accept(int,boost::system::error_code const &);
     void start_accept();
 
     //listen on ports
@@ -48,10 +54,10 @@ public:
     void save_users_to_file();
 
     //Handle functions once meaning is parsed and respond to client.
-    void handle_login(std::string,std::string,ServerTCPConnection *);
-    void handle_newuser(std::string,std::string,ServerTCPConnection*);
-    void handle_send(std::string,ServerTCPConnection*);
-    void handle_logout(ServerTCPConnection*);
+    void handle_login(std::string,std::string,int);
+    void handle_newuser(std::string,std::string,int);
+    void handle_send(std::string,int);
+    void handle_logout(int);
 
     void run();
 };
