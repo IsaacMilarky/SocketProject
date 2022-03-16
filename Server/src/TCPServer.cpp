@@ -143,7 +143,7 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
 
         std::string client_message = line;
 
-        //std::cout << "CLient message: " << line << std::endl;
+        std::cout << "CLient message: " << line << std::endl;
 
         client_message.pop_back();
         std::stringstream streamData(client_message);
@@ -519,6 +519,17 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
             boost::system::error_code ignored_error;
 
             boost::asio::write( dstRef->socket, boost::asio::buffer( *buff ), ignored_error );
+
+            //Respond to client that made request.
+            buff = std::make_shared<std::string>( "\r\n" );
+            boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+        }
+        else
+        {
+            auto buff = std::make_shared<std::string>( "User requested not found!\r\n" );
+            boost::system::error_code ignored_error;
+
+            boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
         }
         
     }
