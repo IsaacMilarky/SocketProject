@@ -1,4 +1,6 @@
 #include "ServerTCPConnection.hpp"
+#include <array>
+#include <memory>
 #include <vector>
 #include <sstream>
 #include <fstream>
@@ -35,7 +37,9 @@ class TCPServer
     std::map<std::string,ServerTCPConnection*> userloginStatus;
 
     //Active connections in here. Keep in array of smart pointers.
-    std::unique_ptr<ServerTCPConnection> server_connections[MAX_CLIENTS];
+    //std::unique_ptr<ServerTCPConnection> server_connections[MAX_CLIENTS];
+    using ConnectIndex = std::array<std::unique_ptr<ServerTCPConnection>,MAX_CLIENTS>::iterator;
+    std::array<std::unique_ptr<ServerTCPConnection>, MAX_CLIENTS> server_connections;
     
 public:
 
@@ -45,13 +49,13 @@ public:
 
     void loadExistingUsers(std::map<std::string,std::string>);
     //Process data recieved from the user once recieved by socket.
-    void handle_read(int,boost::system::error_code const &, size_t );
+    void handle_read(ConnectIndex,boost::system::error_code const &, size_t );
 
     //Determine the desired function from the client's message and return it's code.
-    int do_read(int, std::vector<std::string>*,size_t);
+    int do_read(ConnectIndex, std::vector<std::string>*,size_t);
 
     //Handle an incoming connect() from a client and set up async_reads to be processed by handle_read
-    void handle_accept(int,boost::system::error_code const &);
+    void handle_accept(ConnectIndex,boost::system::error_code const &);
 
     //Start up another async_accept when the previous connection has been serviced.
     void start_accept();
@@ -60,12 +64,12 @@ public:
     void save_users_to_file();
 
     //Handle functions once meaning is parsed and respond to client.
-    void handle_login(std::string,std::string,int);
-    void handle_newuser(std::string,std::string,int);
-    void handle_send_all(std::string,int);
-    void handle_send_user(std::string,std::string,int);
-    void handle_who(int);
-    void handle_logout(int);
+    void handle_login(std::string,std::string,ConnectIndex);
+    void handle_newuser(std::string,std::string,ConnectIndex);
+    void handle_send_all(std::string,ConnectIndex);
+    void handle_send_user(std::string,std::string,ConnectIndex);
+    void handle_who(ConnectIndex);
+    void handle_logout(ConnectIndex);
 
     //Start all async boost.asio operations.
     void run();
