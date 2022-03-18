@@ -11,7 +11,7 @@
 
 #define MAX_CLIENTS 3
 /*
-    Encapsulates the function of a sync tcp server running on a port.
+    Encapsulates the function of an async tcp server running on a port.
 
     Written by Isaac Milarsky 3/8/2022
 */
@@ -39,18 +39,26 @@ class TCPServer
     
 public:
 
+    //Load user variables and set up server_ioservice.
     TCPServer();
     ~TCPServer();
 
+    //Process data recieved from the user once recieved by socket.
     void handle_read(int,boost::system::error_code const &, size_t );
+
+    //Determine the desired function from the client's message and return it's code.
     int do_read(int, std::vector<std::string>*,size_t);
 
+    //Handle an incoming connect() from a client and set up async_reads to be processed by handle_read
     void handle_accept(int,boost::system::error_code const &);
+
+    //Start up another async_accept when the previous connection has been serviced.
     void start_accept();
 
     //listen on ports
     void listen(int);
 
+    //Saves all user information to users.txt
     void save_users_to_file();
 
     //Handle functions once meaning is parsed and respond to client.
@@ -61,5 +69,6 @@ public:
     void handle_who(int);
     void handle_logout(int);
 
+    //Start all async boost.asio operations.
     void run();
 };

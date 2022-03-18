@@ -15,6 +15,17 @@
         This implements a simple asynchronous TCP client in Boost.asio.
         Connection to server is established at program start.
 
+        Boost.asio is used on standard input file descriptors as well as sockets
+        for the client.
+
+        Initally an async connection listener is set up that sends connect packet to server.
+
+        The server sends back the accept which activates an asyncrhonous handler that in turn sets up
+        two asynchronous handlers for any server messages (Like a send user message) and for reading
+        from the user's standard input.
+
+        Replicates earlier functionality but can listen at the same time it can write to server.
+
 */
 
 
@@ -24,6 +35,7 @@ int main()
 
     std::cout << ">";
 
+    //Get heap pointer to client to catch any exceptions in the constructor.
     std::unique_ptr<TCPClient> clientRef;
 
     try
@@ -40,22 +52,8 @@ int main()
     //Add connection listener to io_service.
     clientRef->start_connect();
 
+    //Start running async operations once listeners are set up.
     clientRef->run();
-    /*
-    std::string userInput = "";
-
-    //Get and parse user input until they tell us they want to exit.
-    while(userInput != "exit")
-    {
-        std::cout << ">";
-        std::getline(std::cin,userInput);
-        std::cout << std::endl;
-
-        clientRef->parse_user_message(userInput);
-        //boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-        
-    }
-    */
 
     return 0;
 }

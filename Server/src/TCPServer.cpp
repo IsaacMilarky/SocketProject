@@ -18,8 +18,6 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
         //Parse each line of username password file
         while(std::getline(usertext,line))
         {
-            //std::cout << "Got line: " << line << std::endl;
-
             const char delim = ',';
             std::string token;
 
@@ -44,8 +42,6 @@ TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice 
             password.erase(remove(password.begin(), password.end(), '('), password.end());
             password.erase(remove(password.begin(), password.end(), ')'), password.end());
 
-            //std::cout << "Password: " << password << std::endl;
-
             //Record username password pair and that they haven't connected yet.
             usernamePasswordPairs[user] = password;
             userloginStatus[user] = nullptr;
@@ -65,9 +61,12 @@ TCPServer::~TCPServer()
 //Put all the contents of the given connection's socket buffer in a string using '\n' as terminator
 void TCPServer::handle_read(int connectionID,boost::system::error_code const & err, size_t bytes_transferred)
 {
+    //Handle if response from client has encountered a problem.
     if(err)
     {
         std::cerr << "Connection terminated before data was read!" << std::endl;
+
+        //Mark the connection pointer as nullptr and delete the connection object.
         server_connections[connectionID].reset();
         start_accept();
         return;
@@ -84,6 +83,7 @@ void TCPServer::handle_read(int connectionID,boost::system::error_code const & e
     //Respond to parsed user input. We now have the specific function plus all arguments.
     switch(code)
     {
+        //Pass relevant arguments to respective function handlers.
         case login:
             handle_login(arguments.at(0), arguments.at(1), connectionID);
             break;
@@ -116,7 +116,10 @@ void TCPServer::handle_read(int connectionID,boost::system::error_code const & e
     }
     else
     {
+        //Mark the connection pointer as nullptr and delete the connection object.
         server_connections[connectionID].reset();
+
+        //Prepare to accept the next connection.
         start_accept();
     }
 }
@@ -127,6 +130,7 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
 {
     try
     {
+        //Get the data from the socket out of the connection buffer into a string.
         std::string line;
 
         if(bytes_transferred > 0)
@@ -145,6 +149,7 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
 
         //std::cout << "CLient message: " << line << std::endl;
 
+        //Remove newline.
         client_message.pop_back();
         std::stringstream streamData(client_message);
         
@@ -237,6 +242,7 @@ void TCPServer::handle_accept(int connectionID, boost::system::error_code const 
     //std::cout << "New connection from: " << connectionID->socket.remote_endpoint().address().to_string() << "\n";
     if(!err)
     {
+        //Create a listener to read data from socket and call handler when newline is found.
         auto handler = boost::bind(&TCPServer::handle_read,this,connectionID,boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred);
         boost::asio::async_read_until(server_connections[connectionID]->socket, server_connections[connectionID]->buffer, "\n",handler);
     }
@@ -248,6 +254,7 @@ void TCPServer::handle_accept(int connectionID, boost::system::error_code const 
         server_connections[connectionID].reset();
     }
 
+    //Accept next connection when finished.
     start_accept();
     
 }
@@ -255,6 +262,7 @@ void TCPServer::handle_accept(int connectionID, boost::system::error_code const 
 //This is the main server loop. Sets up async acceptor.
 void TCPServer::start_accept()
 {
+    //Search for a free index in the connection array, using -1 if not found.
     int index = -1;
 
     for(int iter = 0; iter < MAX_CLIENTS; iter++)
@@ -277,10 +285,11 @@ void TCPServer::start_accept()
         //std::cerr << "No more available connections!" << std::endl;
         return;
     }
-    //Create a socket and buffer from OS io object from boost.
 
+    //Create a socket and buffer from OS io object from boost.
     server_connections[index] = std::unique_ptr<ServerTCPConnection>(new ServerTCPConnection(server_ioservice));
 
+    //Create handler to be called when connect() is called by the client.
     auto handler = boost::bind(&TCPServer::handle_accept,this,index,boost::asio::placeholders::error);
     //Block until it is possible to accept a connection.
     server_acceptor.async_accept(server_connections[index]->socket,handler);
@@ -290,7 +299,10 @@ void TCPServer::start_accept()
 //Create the endpoint that the client will connect to and then try to accept a connection.
 void TCPServer::listen(int port)
 {
+    //Create endpoint on port at 127.0.0.1 per instructions.
     auto endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port);
+
+    //Use socket api to open,bind and listen the endpoint.
     server_acceptor.open(endpoint.protocol());
     server_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     server_acceptor.bind(endpoint);
@@ -354,6 +366,7 @@ void TCPServer::handle_login(std::string userID, std::string password, int conne
             boost::system::error_code ignored_error;
             boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
 
+            //Tell everyone except user that user has joined.   
             buff = std::make_shared<std::string>( userID + " joins.\r\n" );
 
             for(int iter = 0; iter < MAX_CLIENTS; iter++)
@@ -412,6 +425,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, int con
 
     if(!userLoggedin)
     {
+        //If count >= 1 then it exists and is true
         if(usernamePasswordPairs.count(userID))
         {
             auto buff = std::make_shared<std::string>( ">Denied. User account already exists.\r\n" );
@@ -443,7 +457,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, int con
 
 }
 
-//Perform the send function and respond to the connection that made it.
+//Perform the send function and respond to all relevant connections.
 void TCPServer::handle_send_all(std::string message, int connectionID)
 {
     std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
@@ -507,6 +521,7 @@ void TCPServer::handle_send_all(std::string message, int connectionID)
 
 }
 
+//Perform the send_user function and respond to both relevant users.
 void TCPServer::handle_send_user(std::string userDst, std::string message, int connectionID)
 {
     std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
@@ -517,6 +532,7 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
 
     ServerTCPConnection * connectionRef = nullptr;
 
+    //Find the user logged in.
     while(iter != userloginStatus.end())
     {
         if(iter->second != nullptr && server_connections[connectionID]->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
@@ -528,7 +544,8 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
         }
         iter++;
     }
-
+    
+    //Get the connection of the target of the message in the logged in users map.
     iter = userloginStatus.begin();
     ServerTCPConnection * dstRef = nullptr;
     while(iter != userloginStatus.end())
@@ -575,26 +592,29 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
 
 }
 
-
+//Search the userloginStatus map for the non null connection objects
 void TCPServer::handle_who(int connectionID)
 {
     std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
 
+    //Hold every username in this.
     std::string message = "";
 
     while(iter != userloginStatus.end())
     {
         if(iter->second != nullptr )
         {
-            
+            //Add name if connection not null.
             message += iter->first + ", ";
         }
         iter++;
     }
 
+    //Get rid of the comma and space at the end.
     message.pop_back();
     message.pop_back();
 
+    //Respond to the client with logged in users.
     auto buff = std::make_shared<std::string>( ">" + message + "\r\n" );
     boost::system::error_code ignored_error;
     boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
