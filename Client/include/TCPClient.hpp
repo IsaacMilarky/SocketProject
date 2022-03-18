@@ -13,7 +13,7 @@
 #include <vector>
 
 /*
-    Encapsulates the function of a TCP client connection
+    Encapsulates the function of an async TCP client connection
 
     Written by Isaac Milarsky 3/11/2022
 */
@@ -33,8 +33,10 @@ class TCPClient
 
 
     //Objects for concurrent user std input
+    //First two act as file descriptor objects for stdin
     boost::asio::posix::stream_descriptor userInput_;
     boost::asio::posix::stream_descriptor userOutput_;
+    //Last one acts as a buffer for data operations on stdin.
     boost::asio::streambuf input_buffer_;
 
 public:
@@ -55,19 +57,15 @@ public:
     void parse_user_message(std::string);
 
 
+    //Handle the functionality of the client-side server functions.
     void handle_write(const boost::system::error_code&);
     //Send functions
     void terminate_connection();
     void handle_login(std::vector<std::string>*);
     void handle_newuser(std::vector<std::string>*);
-
     void handle_send(std::string);
-
     void handle_logout();
-
     void handle_who();
-
-    std::string wait_for_response();
 
 
     void run();
