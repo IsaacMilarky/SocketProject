@@ -25,6 +25,11 @@ void TCPClient::handle_connect(const boost::system::error_code & err)
 {
     if(!err)
     {
+        boost::system::error_code ignored_error;
+        auto buff = std::make_shared<std::string>( ">" );
+        //auto printHandler = boost::bind(&TCPClient::handle_write,this,boost::asio::placeholders::error);
+        
+        boost::asio::write(userOutput_,boost::asio::buffer(*buff),ignored_error);
         start_listen();
         start_get_std_input();
     }
@@ -62,7 +67,17 @@ void TCPClient::handle_server_message(const boost::system::error_code & err, siz
             line = "";
         }
 
-        std::cout << line << std::endl;
+        //std::cout << line << std::endl;
+        boost::system::error_code ignored_error;
+
+        auto buff = std::make_shared<std::string>( line + "\n" );
+        //auto printHandler = boost::bind(&TCPClient::handle_write,this,boost::asio::placeholders::error);
+        boost::asio::write(userOutput_,boost::asio::buffer(*buff),ignored_error);
+
+        buff = std::make_shared<std::string>( ">" );
+        //auto printHandler = boost::bind(&TCPClient::handle_write,this,boost::asio::placeholders::error);
+        
+        boost::asio::write(userOutput_,boost::asio::buffer(*buff),ignored_error);
     }
 
     start_listen();
@@ -70,6 +85,9 @@ void TCPClient::handle_server_message(const boost::system::error_code & err, siz
 
 void TCPClient::start_get_std_input()
 {
+    //std::cout << ">";
+    
+
     auto handler = boost::bind(&TCPClient::handle_std_input,this,boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred);
 
     boost::asio::async_read_until(userInput_,input_buffer_,'\n',handler);
@@ -174,7 +192,12 @@ void TCPClient::parse_user_message(std::string userMessage)
     }
     else
     {
-        std::cout << "Command not recognized!" << std::endl;
+        boost::system::error_code ignored_error;
+
+        auto buff = std::make_shared<std::string>( "Command not recognized!\n>" );
+        //auto printHandler = boost::bind(&TCPClient::handle_write,this,boost::asio::placeholders::error);
+        
+        boost::asio::write(userOutput_,boost::asio::buffer(*buff),ignored_error);
         return;
     }
 }
@@ -197,6 +220,8 @@ void TCPClient::terminate_connection()
     boost::asio::async_write(chatConnection.socket,boost::asio::buffer(*buff),handler);
 
     //boost::asio::write( chatConnection.socket, boost::asio::buffer( *buff ), ignored_error );
+
+    client_io_service.stop();
 }
 
 //Check the arguments and then send the login request to the server.

@@ -274,7 +274,7 @@ void TCPServer::start_accept()
 
     if(index == -1)
     {
-        std::cerr << "No more available connections!" << std::endl;
+        //std::cerr << "No more available connections!" << std::endl;
         return;
     }
     //Create a socket and buffer from OS io object from boost.
@@ -350,23 +350,40 @@ void TCPServer::handle_login(std::string userID, std::string password, int conne
             userloginStatus[userID] = server_connections[connectionID].get();
 
             //Tell the user that they are logged in.
-            auto buff = std::make_shared<std::string>( "login confirmed\r\n" );
+            auto buff = std::make_shared<std::string>( ">login confirmed\r\n" );
             boost::system::error_code ignored_error;
             boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+
+            buff = std::make_shared<std::string>( userID + " joins.\r\n" );
+
+            for(int iter = 0; iter < MAX_CLIENTS; iter++)
+            {
+                if(iter == connectionID)
+                {
+                    continue;
+                }
+                //Check if there is an empty spot.
+                ServerTCPConnection * connectionRef = server_connections[iter].get();
+
+                if(connectionRef != nullptr)
+                {
+                    boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+                }
+            }
 
             std::cout << userID << " login." << std::endl;
         }
         else
         {
             //Denied. User name or password incorrect.
-            auto buff = std::make_shared<std::string>( "Denied. User name or password incorrect.\r\n" );
+            auto buff = std::make_shared<std::string>( ">Denied. User name or password incorrect.\r\n" );
             boost::system::error_code ignored_error;
             boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
         }
     }
     else
     {
-        auto buff = std::make_shared<std::string>( "Denied. Can't login while logged in.\r\n" );
+        auto buff = std::make_shared<std::string>( ">Denied. Can't login while logged in.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
     }
@@ -397,7 +414,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, int con
     {
         if(usernamePasswordPairs.count(userID))
         {
-            auto buff = std::make_shared<std::string>( "Denied. User account already exists.\r\n" );
+            auto buff = std::make_shared<std::string>( ">Denied. User account already exists.\r\n" );
             boost::system::error_code ignored_error;
             boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
 
@@ -409,7 +426,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, int con
 
 
             std::cout << "New user account created." << std::endl;
-            auto buff = std::make_shared<std::string>( "New user account created. Please login.\r\n" );
+            auto buff = std::make_shared<std::string>( ">New user account created. Please login.\r\n" );
             boost::system::error_code ignored_error;
             boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
 
@@ -419,7 +436,7 @@ void TCPServer::handle_newuser(std::string userID, std::string password, int con
     }
     else
     {
-        auto buff = std::make_shared<std::string>( "Denied. Can't create user while logged in.\r\n" );
+        auto buff = std::make_shared<std::string>( ">Denied. Can't create user while logged in.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
     }
@@ -451,23 +468,39 @@ void TCPServer::handle_send_all(std::string message, int connectionID)
         //Send to clients
         std::cout << userID << ":" << message << std::endl;
 
-        auto buff = std::make_shared<std::string>( userID + ":" + message + "\r\n" );
+        
         boost::system::error_code ignored_error;
 
         for(int iter = 0; iter < MAX_CLIENTS; iter++)
         {
-            //Check if there is an empty spot.
-            ServerTCPConnection * connectionRef = server_connections[iter].get();
-
-            if(connectionRef != nullptr)
+            if(iter != connectionID)
             {
-                boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+                auto buff = std::make_shared<std::string>(userID + ":" + message + "\r\n" );
+                //Check if there is an empty spot.
+                ServerTCPConnection * connectionRef = server_connections[iter].get();
+
+                if(connectionRef != nullptr)
+                {
+                    boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+                }
             }
+            else 
+            {
+                auto buff = std::make_shared<std::string>(">\r\n" );
+                //Check if there is an empty spot.
+                ServerTCPConnection * connectionRef = server_connections[iter].get();
+
+                if(connectionRef != nullptr)
+                {
+                    boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+                }
+            }
+            
         }
     }
     else
     {
-        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
+        auto buff = std::make_shared<std::string>( ">Denied. Please login first.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
     }
@@ -526,7 +559,7 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
         }
         else
         {
-            auto buff = std::make_shared<std::string>( "User requested not found!\r\n" );
+            auto buff = std::make_shared<std::string>( ">User requested not found!\r\n" );
             boost::system::error_code ignored_error;
 
             boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
@@ -535,7 +568,7 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
     }
     else
     {
-        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
+        auto buff = std::make_shared<std::string>( ">Denied. Please login first.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
     }
@@ -562,7 +595,7 @@ void TCPServer::handle_who(int connectionID)
     message.pop_back();
     message.pop_back();
 
-    auto buff = std::make_shared<std::string>( message + "\r\n" );
+    auto buff = std::make_shared<std::string>( ">" + message + "\r\n" );
     boost::system::error_code ignored_error;
     boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
 
@@ -596,13 +629,40 @@ void TCPServer::handle_logout(int connectionID)
     //Send success if suceeded.
     if(userWasLoggedIn)
     {
-        auto buff = std::make_shared<std::string>( name + " left.\r\n" );
+        
         boost::system::error_code ignored_error;
-        boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+        //boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
+        for(int iter = 0; iter < MAX_CLIENTS; iter++)
+        {
+            if(iter != connectionID)
+            {
+                auto buff = std::make_shared<std::string>( ">" + name + " left.\r\n" );
+                //Check if there is an empty spot.
+                ServerTCPConnection * connectionRef = server_connections[iter].get();
+
+                if(connectionRef != nullptr)
+                {
+                    boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+                }
+            }
+            else 
+            {
+                auto buff = std::make_shared<std::string>( ">\r\n" );
+                //Check if there is an empty spot.
+                ServerTCPConnection * connectionRef = server_connections[iter].get();
+
+                if(connectionRef != nullptr)
+                {
+                    boost::asio::write( connectionRef->socket, boost::asio::buffer( *buff ), ignored_error );
+                }
+                
+            }
+            
+        }
     }
     else
     {
-        auto buff = std::make_shared<std::string>( "Denied. Please login first.\r\n" );
+        auto buff = std::make_shared<std::string>( ">Denied. Please login first.\r\n" );
         boost::system::error_code ignored_error;
         boost::asio::write( server_connections[connectionID]->socket, boost::asio::buffer( *buff ), ignored_error );
     }

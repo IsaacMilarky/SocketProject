@@ -22,6 +22,8 @@ int main()
 {
     std::cout << "My chat room client. Version Two." << std::endl;
 
+    std::cout << ">";
+
     std::unique_ptr<TCPClient> clientRef;
 
     try
