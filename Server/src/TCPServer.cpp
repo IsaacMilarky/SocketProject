@@ -306,8 +306,9 @@ void TCPServer::handle_login(std::string userID, std::string password, ConnectIn
 
     if(!userLoggedin)
     {
+        auto user = usernamePasswordPairs.find(userID);
         //Make sure user exists with the specified password.
-        if(usernamePasswordPairs.count(userID) && usernamePasswordPairs[userID].compare(password) == 0)
+        if(user != usernamePasswordPairs.end() && usernamePasswordPairs[userID].compare(password) == 0)
         {
             //Cache what connection logged on as that user for later confirmation.
             userloginStatus[userID] = (*connectionID).get();
