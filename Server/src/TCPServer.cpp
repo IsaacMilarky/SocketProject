@@ -143,7 +143,7 @@ int TCPServer::do_read(int connectionID, std::vector<std::string>* args,size_t b
 
         std::string client_message = line;
 
-        std::cout << "CLient message: " << line << std::endl;
+        //std::cout << "CLient message: " << line << std::endl;
 
         client_message.pop_back();
         std::stringstream streamData(client_message);

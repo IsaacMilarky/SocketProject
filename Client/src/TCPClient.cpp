@@ -77,7 +77,7 @@ void TCPClient::start_get_std_input()
 
 void TCPClient::handle_std_input(const boost::system::error_code & err, size_t bytes_transferred)
 {
-    std::cout << "Got here" << std::endl;
+    //std::cout << "Got here" << std::endl;
     if(!err)
     {
         std::unique_ptr<char[]> inputBuffer = std::unique_ptr<char[]>(new char [bytes_transferred]);
@@ -91,7 +91,7 @@ void TCPClient::handle_std_input(const boost::system::error_code & err, size_t b
         }
 
         userMessage.pop_back();
-        std::cout << "USERMESSAGE: " << userMessage << std::endl;
+        //std::cout << "USERMESSAGE: " << userMessage << std::endl;
 
         parse_user_message(userMessage);
     }
