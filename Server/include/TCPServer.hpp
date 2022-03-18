@@ -1,5 +1,6 @@
 #include "ServerTCPConnection.hpp"
 #include <array>
+#include <boost/asio/ip/tcp.hpp>
 #include <memory>
 #include <vector>
 #include <sstream>
@@ -70,6 +71,9 @@ public:
     void handle_send_user(std::string,std::string,ConnectIndex);
     void handle_who(ConnectIndex);
     void handle_logout(ConnectIndex);
+
+    //Send message to client.
+    void respond(std::string,boost::asio::ip::tcp::socket *);
 
     //Start all async boost.asio operations.
     void run();
