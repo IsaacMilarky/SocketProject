@@ -466,7 +466,7 @@ void TCPServer::handle_send_all(std::string message, int connectionID)
     if(userLoggedin)
     {
         //Send to clients
-        std::cout << userID << ":" << message << std::endl;
+        std::cout << userID << ": " << message << std::endl;
 
         
         boost::system::error_code ignored_error;
@@ -475,7 +475,7 @@ void TCPServer::handle_send_all(std::string message, int connectionID)
         {
             if(iter != connectionID)
             {
-                auto buff = std::make_shared<std::string>(userID + ":" + message + "\r\n" );
+                auto buff = std::make_shared<std::string>(userID + ": " + message + "\r\n" );
                 //Check if there is an empty spot.
                 ServerTCPConnection * connectionRef = server_connections[iter].get();
 
@@ -546,9 +546,9 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, int c
         //Send to client
         if(dstRef)
         {
-            std::cout << userID << ":" << message << std::endl;
+            std::cout << userID << " (to " << userDst << "): " << message << std::endl;
 
-            auto buff = std::make_shared<std::string>( userID + ":" + message + "\r\n" );
+            auto buff = std::make_shared<std::string>( userID + ": " + message + "\r\n" );
             boost::system::error_code ignored_error;
 
             boost::asio::write( dstRef->socket, boost::asio::buffer( *buff ), ignored_error );
@@ -636,7 +636,7 @@ void TCPServer::handle_logout(int connectionID)
         {
             if(iter != connectionID)
             {
-                auto buff = std::make_shared<std::string>( ">" + name + " left.\r\n" );
+                auto buff = std::make_shared<std::string>( name + " left.\r\n" );
                 //Check if there is an empty spot.
                 ServerTCPConnection * connectionRef = server_connections[iter].get();
 
