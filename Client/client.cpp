@@ -35,6 +35,11 @@ int main()
         return -1;
     }
 
+    //Add connection listener to io_service.
+    clientRef->start_connect();
+
+    clientRef->run();
+    /*
     std::string userInput = "";
 
     //Get and parse user input until they tell us they want to exit.
@@ -48,7 +53,7 @@ int main()
         //boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
         
     }
-
+    */
 
     return 0;
 }

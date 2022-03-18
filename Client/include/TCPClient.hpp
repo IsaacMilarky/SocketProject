@@ -1,5 +1,11 @@
 #include "ServerTCPConnection.hpp"
 #include <boost/asio/ip/address.hpp>
+#include <boost/asio/posix/stream_descriptor.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <boost/system/detail/error_code.hpp>
+#include <boost/asio.hpp>
+#include <boost/array.hpp>
+#include <boost/bind/bind.hpp>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
@@ -25,11 +31,31 @@ class TCPClient
     //The socket and buffer for the connection.
     ServerTCPConnection chatConnection;
 
+
+    //Objects for concurrent user std input
+    boost::asio::posix::stream_descriptor userInput_;
+    boost::asio::posix::stream_descriptor userOutput_;
+    boost::asio::streambuf input_buffer_;
+
 public:
     TCPClient(std::string,int);
 
+    //Async connect.
+    void start_connect();
+    void handle_connect(const boost::system::error_code&);
+
+    //Set up server data listener.
+    void start_listen();
+    void handle_server_message(const boost::system::error_code &, size_t);
+
+    //Set up listener for user's input with Boost.asio
+    void start_get_std_input();
+    void handle_std_input(const boost::system::error_code &, size_t);
+
     void parse_user_message(std::string);
 
+
+    void handle_write(const boost::system::error_code&);
     //Send functions
     void terminate_connection();
     void handle_login(std::vector<std::string>*);
@@ -42,5 +68,8 @@ public:
     void handle_who();
 
     std::string wait_for_response();
+
+
+    void run();
 
 };
