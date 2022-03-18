@@ -6,56 +6,31 @@
 #include <map>
 
 //Init ioservice and acceptor in constant definitions up top.
-TCPServer::TCPServer() : server_ioservice( ), server_acceptor( server_ioservice )
+TCPServer::TCPServer(int port) : server_ioservice( ), server_acceptor( server_ioservice )
 {
-    //Get username password pairs from file
-    std::ifstream usertext("../users.txt");
+    //Create endpoint on port at 127.0.0.1 per instructions.
+    auto endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port);
 
-    if(usertext.is_open())
-    {
-        std::string line;
-        
-        //Parse each line of username password file
-        while(std::getline(usertext,line))
-        {
-            const char delim = ',';
-            std::string token;
-
-            //Put file's line in string stream and get characters before and after ','
-            std::stringstream userLine(line);
-            std::getline(userLine,token,delim);
-
-            std::string user = token;
-            //Remove the characters not part of user or password ' ' or '(',')'
-            user.erase(remove(user.begin(), user.end(), ' '), user.end());
-            user.erase(remove(user.begin(), user.end(), '('), user.end());
-            user.erase(remove(user.begin(), user.end(), ')'), user.end());
-
-            //Same idea but get text after , for the password and remove parenthesis and spaces
-            std::getline(userLine,token,delim);
-
-            std::string password = token;
-
-            password.erase(password.length() - 1);
-
-            password.erase(remove(password.begin(), password.end(), ' '), password.end());
-            password.erase(remove(password.begin(), password.end(), '('), password.end());
-            password.erase(remove(password.begin(), password.end(), ')'), password.end());
-
-            //Record username password pair and that they haven't connected yet.
-            usernamePasswordPairs[user] = password;
-            userloginStatus[user] = nullptr;
-        }
-
-
-        usertext.close();
-
-    }
+    //Use socket api to open,bind and listen the endpoint.
+    server_acceptor.open(endpoint.protocol());
+    server_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+    server_acceptor.bind(endpoint);
+    server_acceptor.listen();
+    start_accept();
 }
 
 TCPServer::~TCPServer()
 {
     
+}
+
+void TCPServer::loadExistingUsers(std::map<std::string, std::string> userPairs)
+{
+    for(auto const& iter : userPairs)
+    {
+        usernamePasswordPairs[iter.first] = iter.second;
+        userloginStatus[iter.first] = nullptr;
+    }
 }
 
 //Put all the contents of the given connection's socket buffer in a string using '\n' as terminator
@@ -295,21 +270,6 @@ void TCPServer::start_accept()
     server_acceptor.async_accept(server_connections[index]->socket,handler);
 
 }
-
-//Create the endpoint that the client will connect to and then try to accept a connection.
-void TCPServer::listen(int port)
-{
-    //Create endpoint on port at 127.0.0.1 per instructions.
-    auto endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port);
-
-    //Use socket api to open,bind and listen the endpoint.
-    server_acceptor.open(endpoint.protocol());
-    server_acceptor.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
-    server_acceptor.bind(endpoint);
-    server_acceptor.listen();
-    start_accept();
-}
-
 
 //Saves the contents of the usernamepasswordPairs variable that stores login info.
 void TCPServer::save_users_to_file()

@@ -40,9 +40,10 @@ class TCPServer
 public:
 
     //Load user variables and set up server_ioservice.
-    TCPServer();
+    TCPServer(int);
     ~TCPServer();
 
+    void loadExistingUsers(std::map<std::string,std::string>);
     //Process data recieved from the user once recieved by socket.
     void handle_read(int,boost::system::error_code const &, size_t );
 
@@ -54,9 +55,6 @@ public:
 
     //Start up another async_accept when the previous connection has been serviced.
     void start_accept();
-
-    //listen on ports
-    void listen(int);
 
     //Saves all user information to users.txt
     void save_users_to_file();
