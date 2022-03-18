@@ -13,10 +13,6 @@ TCPClient::TCPClient(std::string addressString, int port) : client_io_service(),
 {
     //Create endpoint object from address.
     target_host_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string(addressString),port);
-    
-
-    //Start a session with the server.
-    //chatConnection.socket.connect(target_host_endpoint);
 }
 
 //Send connect packet and set up an async handler to activate when server sends response.
@@ -70,10 +66,7 @@ void TCPClient::handle_server_message(const boost::system::error_code & err, siz
         if(chatConnection.buffer.size() > 0)
         {
             std::istream is( &chatConnection.buffer);
-
             std::getline(is, line);
-
-            //std::cout << line << std::endl;
 
         }
         else {
@@ -84,13 +77,10 @@ void TCPClient::handle_server_message(const boost::system::error_code & err, siz
 
         //Print string from buffer to standard output.
         auto buff = std::make_shared<std::string>( line + "\n" );
-        //auto printHandler = boost::bind(&TCPClient::handle_write,this,boost::asio::placeholders::error);
         boost::asio::write(userOutput_,boost::asio::buffer(*buff),ignored_error);
 
         //Replace prompt string for user.
         buff = std::make_shared<std::string>( ">" );
-        //auto printHandler = boost::bind(&TCPClient::handle_write,this,boost::asio::placeholders::error);
-        
         boost::asio::write(userOutput_,boost::asio::buffer(*buff),ignored_error);
     }
 
@@ -101,11 +91,7 @@ void TCPClient::handle_server_message(const boost::system::error_code & err, siz
 //Set up listener for user input
 void TCPClient::start_get_std_input()
 {
-    //std::cout << ">";
-    
-
     auto handler = boost::bind(&TCPClient::handle_std_input,this,boost::asio::placeholders::error,boost::asio::placeholders::bytes_transferred);
-
     boost::asio::async_read_until(userInput_,input_buffer_,'\n',handler);
 }
 
