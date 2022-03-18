@@ -272,12 +272,11 @@ void TCPServer::save_users_to_file()
     if(usertext.is_open())
     {
         //Write map to file
-        std::map<std::string,std::string>::iterator iter = usernamePasswordPairs.begin();
+        
 
-        while(iter != usernamePasswordPairs.end())
+        for(auto &iter : usernamePasswordPairs)
         {
-            usertext << "(" << iter->first << ", " << iter->second << ")\n";
-            iter++;
+            usertext << "(" << iter.first << ", " << iter.second << ")\n";
         }
 
         usertext.close();
@@ -291,19 +290,18 @@ void TCPServer::save_users_to_file()
 void TCPServer::handle_login(std::string userID, std::string password, ConnectIndex connectionID)
 {
     //Search for connection that matches the connection that requested login.
-    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
+    //std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
     bool userLoggedin = false;
 
-    while(iter != userloginStatus.end())
+    for(auto &elem: userloginStatus)
     {
-        if(iter->second != nullptr && (*connectionID)->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        if(elem.second != nullptr && (*connectionID)->socket.remote_endpoint() == elem.second->socket.remote_endpoint())
         {
             //If we find a matching connection we know the user is logged in.
             userLoggedin = true;
             //userName = iter->first;
             break;
         }
-        iter++;
     }
 
     if(!userLoggedin)
@@ -318,7 +316,7 @@ void TCPServer::handle_login(std::string userID, std::string password, ConnectIn
             std::string confirm( ">login confirmed\r\n" );
             respond(confirm, &(*connectionID)->socket);
 
-            
+
             //Tell everyone except user that user has joined.   
             std::string userJoin( userID + " joins.\r\n" );
 
@@ -360,19 +358,17 @@ void TCPServer::handle_newuser(std::string userID, std::string password, Connect
 {
 
     //Search for connection that matches the connection that requested newuser.
-    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
     bool userLoggedin = false;
 
-    while(iter != userloginStatus.end())
+    for(auto &iter: userloginStatus)
     {
-        if(iter->second != nullptr && (*connectionID)->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        if(iter.second != nullptr && (*connectionID)->socket.remote_endpoint() == iter.second->socket.remote_endpoint())
         {
             //If we find a matching connection we know the user is logged in.
             userLoggedin = true;
             //userName = iter->first;
             break;
         }
-        iter++;
     }
 
     if(!userLoggedin)
@@ -409,21 +405,18 @@ void TCPServer::handle_newuser(std::string userID, std::string password, Connect
 //Perform the send function and respond to all relevant connections.
 void TCPServer::handle_send_all(std::string message, ConnectIndex connectionID)
 {
-    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
-
     bool userLoggedin = false;
     //Also get the userID to send back.
     std::string userID = "";
 
-    while(iter != userloginStatus.end())
+    for(auto &iter: userloginStatus)
     {
-        if(iter->second != nullptr && (*connectionID)->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        if(iter.second != nullptr && (*connectionID)->socket.remote_endpoint() == iter.second->socket.remote_endpoint())
         {
             userLoggedin = true;
-            userID = iter->first;
+            userID = iter.first;
             break;
         }
-        iter++;
     }
 
     if(userLoggedin)
@@ -472,8 +465,7 @@ void TCPServer::handle_send_all(std::string message, ConnectIndex connectionID)
 //Perform the send_user function and respond to both relevant users.
 void TCPServer::handle_send_user(std::string userDst, std::string message, ConnectIndex connectionID)
 {
-    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
-
+    
     bool userLoggedin = false;
     //Also get the userID to send back.
     std::string userID = "";
@@ -481,29 +473,26 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, Conne
     ServerTCPConnection * connectionRef = nullptr;
 
     //Find the user logged in.
-    while(iter != userloginStatus.end())
+    for(auto &iter : userloginStatus)
     {
-        if(iter->second != nullptr && (*connectionID)->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        if(iter.second != nullptr && (*connectionID)->socket.remote_endpoint() == iter.second->socket.remote_endpoint())
         {
             userLoggedin = true;
-            userID = iter->first;
-            connectionRef = iter->second;
+            userID = iter.first;
+            connectionRef = iter.second;
             break;
         }
-        iter++;
     }
     
     //Get the connection of the target of the message in the logged in users map.
-    iter = userloginStatus.begin();
     ServerTCPConnection * dstRef = nullptr;
-    while(iter != userloginStatus.end())
+    for(auto &iter : userloginStatus)
     {
-        if(iter->second != nullptr && userDst == iter->first)
+        if(iter.second != nullptr && userDst == iter.first)
         {
-            dstRef = iter->second;
+            dstRef = iter.second;
             break;
         }
-        iter++;
     }
 
     if(userLoggedin)
@@ -538,19 +527,16 @@ void TCPServer::handle_send_user(std::string userDst, std::string message, Conne
 //Search the userloginStatus map for the non null connection objects
 void TCPServer::handle_who(ConnectIndex connectionID)
 {
-    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
-
     //Hold every username in this.
     std::string message = "";
 
-    while(iter != userloginStatus.end())
+    for(auto &iter : userloginStatus)
     {
-        if(iter->second != nullptr )
+        if(iter.second != nullptr )
         {
             //Add name if connection not null.
-            message += iter->first + ", ";
+            message += iter.first + ", ";
         }
-        iter++;
     }
 
     //Get rid of the comma and space at the end.
@@ -567,24 +553,22 @@ void TCPServer::handle_who(ConnectIndex connectionID)
 void TCPServer::handle_logout(ConnectIndex connectionID)
 {
     //First figure out if the connection is logged in and record the name if it is.
-    std::map<std::string,ServerTCPConnection*>::iterator iter = userloginStatus.begin();
     bool userWasLoggedIn = false;
     std::string name = "";
 
-    while(iter != userloginStatus.end())
+    for(auto &iter : userloginStatus)
     {
-        if(iter->second != nullptr && (*connectionID)->socket.remote_endpoint() == iter->second->socket.remote_endpoint())
+        if(iter.second != nullptr && (*connectionID)->socket.remote_endpoint() == iter.second->socket.remote_endpoint())
         {
             //Log them out here if they are logged in.
-            userloginStatus[iter->first] = nullptr;
-            std::cout << iter->first << " logout." << std::endl;
+            userloginStatus[iter.first] = nullptr;
+            std::cout << iter.first << " logout." << std::endl;
 
             //They were logged in, send a success message later on.
             userWasLoggedIn = true;
-            name = iter->first;
+            name = iter.first;
             break;
         }
-        iter++;
     }
 
     //Send success if suceeded.
